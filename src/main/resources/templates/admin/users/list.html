@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>用户管理</title>
+    <link rel="stylesheet" th:href="@{/style.css}">
+</head>
+<body>
+<main class="page">
+    <header class="site-header">
+        <a class="brand" th:href="@{/admin/articles}">后台管理</a>
+        <nav class="nav admin-nav">
+            <a th:href="@{/admin/articles}">文章</a>
+            <a th:href="@{/admin/users}">用户</a>
+            <a th:href="@{/admin/comments}">评论</a>
+            <a th:href="@{/admin/categories}">分类</a>
+            <a th:href="@{/admin/tags}">标签</a>
+        </nav>
+    </header>
+    <h1>用户管理</h1>
+    <section class="table-list">
+        <article class="row-item" th:each="user : ${users}">
+            <div>
+                <strong th:text="${user.username}">用户名</strong>
+                <span class="meta" th:text="${user.role}">角色</span>
+            </div>
+            <form th:action="@{/admin/users/{id}/delete(id=${user.id})}" method="post">
+                <button class="danger" type="submit">删除</button>
+            </form>
+        </article>
+    </section>
+</main>
+</body>
+</html>

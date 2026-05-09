@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>后台发布文章</title>
+    <link rel="stylesheet" th:href="@{/style.css}">
+</head>
+<body>
+<main class="page">
+    <header class="site-header">
+        <a class="brand" th:href="@{/admin/articles}">后台管理</a>
+        <nav class="nav"><a th:href="@{/admin/articles}">返回文章管理</a></nav>
+    </header>
+    <form class="editor-form" th:action="@{/admin/articles}" th:object="${articleForm}" method="post">
+        <h1>发布文章</h1>
+        <p class="error" th:if="${error}" th:text="${error}">保存失败</p>
+        <label>标题<input type="text" th:field="*{title}" maxlength="200" required></label>
+        <label>分类
+            <select th:field="*{categoryId}" required>
+                <option value="">请选择分类</option>
+                <option th:each="category : ${categories}" th:value="${category.id}" th:text="${category.name}">分类</option>
+            </select>
+        </label>
+        <fieldset class="checkbox-group">
+            <legend>标签</legend>
+            <label th:each="tag : ${tags}">
+                <input type="checkbox" name="tagIds" th:value="${tag.id}" th:checked="${articleForm.tagIds.contains(tag.id)}">
+                <span th:text="${tag.name}">标签</span>
+            </label>
+        </fieldset>
+        <label>正文<textarea th:field="*{content}" rows="14" required></textarea></label>
+        <button type="submit">保存文章</button>
+    </form>
+</main>
+</body>
+</html>

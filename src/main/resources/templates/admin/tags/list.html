@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>标签管理</title>
+    <link rel="stylesheet" th:href="@{/style.css}">
+</head>
+<body>
+<main class="page">
+    <header class="site-header">
+        <a class="brand" th:href="@{/admin/articles}">后台管理</a>
+        <nav class="nav admin-nav">
+            <a th:href="@{/admin/articles}">文章</a>
+            <a th:href="@{/admin/users}">用户</a>
+            <a th:href="@{/admin/comments}">评论</a>
+            <a th:href="@{/admin/categories}">分类</a>
+            <a th:href="@{/admin/tags}">标签</a>
+        </nav>
+    </header>
+    <h1>标签管理</h1>
+    <form class="inline-form" th:action="@{/admin/tags}" method="post">
+        <input type="text" name="name" placeholder="新标签名称" required>
+        <button type="submit">新增标签</button>
+    </form>
+    <section class="table-list">
+        <article class="row-item" th:each="tag : ${tags}">
+            <form class="inline-form" th:action="@{/admin/tags/{id}(id=${tag.id})}" method="post">
+                <input type="text" name="name" th:value="${tag.name}" required>
+                <button class="secondary" type="submit">保存</button>
+            </form>
+            <form th:action="@{/admin/tags/{id}/delete(id=${tag.id})}" method="post">
+                <button class="danger" type="submit">删除</button>
+            </form>
+        </article>
+    </section>
+</main>
+</body>
+</html>

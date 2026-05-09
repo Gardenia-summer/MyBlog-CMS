@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文章管理</title>
+    <link rel="stylesheet" th:href="@{/style.css}">
+</head>
+<body>
+<main class="page">
+    <header class="site-header">
+        <a class="brand" th:href="@{/admin/articles}">后台管理</a>
+        <nav class="nav admin-nav">
+            <a th:href="@{/admin/articles}">文章</a>
+            <a th:href="@{/admin/users}">用户</a>
+            <a th:href="@{/admin/comments}">评论</a>
+            <a th:href="@{/admin/categories}">分类</a>
+            <a th:href="@{/admin/tags}">标签</a>
+            <form th:action="@{/admin/logout}" method="post"><button class="link-action" type="submit">退出</button></form>
+        </nav>
+    </header>
+
+    <section class="toolbar">
+        <form class="search-form" th:action="@{/admin/articles}" method="get">
+            <input type="search" name="keyword" placeholder="搜索文章" th:value="${keyword}">
+            <button type="submit">搜索</button>
+            <a class="button" th:href="@{/admin/articles/new}">发布文章</a>
+        </form>
+    </section>
+
+    <section class="article-list" th:if="${!articlePage.empty}">
+        <article class="article-item admin-item" th:each="article : ${articlePage.content}">
+            <div>
+                <a class="article-title" th:href="@{/articles/{id}(id=${article.id})}" th:text="${article.title}">文章标题</a>
+                <div class="meta">
+                    <span th:text="${article.author.username}">作者</span>
+                    <span th:text="${article.category.name}">分类</span>
+                    <time th:text="${#temporals.format(article.createdAt, 'yyyy-MM-dd HH:mm')}">时间</time>
+                </div>
+            </div>
+            <form th:action="@{/admin/articles/{id}/delete(id=${article.id})}" method="post">
+                <button class="danger" type="submit">删除</button>
+            </form>
+        </article>
+    </section>
+    <p class="empty" th:if="${articlePage.empty}">暂无文章。</p>
+</main>
+</body>
+</html>

@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>评论管理</title>
+    <link rel="stylesheet" th:href="@{/style.css}">
+</head>
+<body>
+<main class="page">
+    <header class="site-header">
+        <a class="brand" th:href="@{/admin/articles}">后台管理</a>
+        <nav class="nav admin-nav">
+            <a th:href="@{/admin/articles}">文章</a>
+            <a th:href="@{/admin/users}">用户</a>
+            <a th:href="@{/admin/comments}">评论</a>
+            <a th:href="@{/admin/categories}">分类</a>
+            <a th:href="@{/admin/tags}">标签</a>
+        </nav>
+    </header>
+    <h1>评论管理</h1>
+    <section class="table-list" th:if="${!commentPage.empty}">
+        <article class="row-item" th:each="comment : ${commentPage.content}">
+            <div>
+                <strong th:text="${comment.author.username}">评论用户</strong>
+                <a th:href="@{/articles/{id}(id=${comment.article.id})}" th:text="${comment.article.title}">文章</a>
+                <p th:text="${comment.content}">评论内容</p>
+            </div>
+            <form th:action="@{/admin/comments/{id}/delete(id=${comment.id})}" method="post">
+                <button class="danger" type="submit">删除</button>
+            </form>
+        </article>
+    </section>
+    <p class="empty" th:if="${commentPage.empty}">暂无评论。</p>
+</main>
+</body>
+</html>

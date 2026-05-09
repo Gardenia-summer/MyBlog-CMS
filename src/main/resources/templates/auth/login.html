@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>用户登录</title>
+    <link rel="stylesheet" th:href="@{/style.css}">
+</head>
+<body>
+<main class="auth-page">
+    <form class="form-panel" th:action="@{/login}" method="post">
+        <h1>用户登录</h1>
+        <p class="success" th:if="${message}" th:text="${message}">注册成功</p>
+        <p class="error" th:if="${error}" th:text="${error}">登录失败</p>
+        <label>用户名<input type="text" name="username" required autocomplete="username"></label>
+        <label>密码<input type="password" name="password" required autocomplete="current-password"></label>
+        <button type="submit">登录</button>
+        <a th:href="@{/register}">还没有账号？去注册</a>
+        <a th:href="@{/admin/login}">管理员登录</a>
+    </form>
+</main>
+</body>
+</html>

@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的博客</title>
+    <link rel="stylesheet" th:href="@{/style.css}">
+</head>
+<body>
+<main class="page">
+    <header class="site-header">
+        <a class="brand" th:href="@{/}">我的博客</a>
+        <nav class="nav">
+            <a th:href="@{/}">首页</a>
+            <a th:if="${currentUser != null}" th:href="@{/me/articles}">我的</a>
+            <a th:if="${currentUser == null}" th:href="@{/login}">登录</a>
+            <a th:if="${currentUser == null}" th:href="@{/register}">注册</a>
+            <form th:if="${currentUser != null}" th:action="@{/logout}" method="post">
+                <button class="link-action" type="submit">退出</button>
+            </form>
+        </nav>
+    </header>
+
+    <section class="toolbar">
+        <form class="search-form" th:action="@{/}" method="get">
+            <input type="search" name="keyword" placeholder="搜索标题、正文、作者、分类或标签" th:value="${keyword}">
+            <select name="categoryId">
+                <option value="">全部分类</option>
+                <option th:each="category : ${categories}"
+                        th:value="${category.id}"
+                        th:selected="${categoryId == category.id}"
+                        th:text="${category.name}">分类</option>
+            </select>
+            <select name="tagId">
+                <option value="">全部标签</option>
+                <option th:each="tag : ${tags}"
+                        th:value="${tag.id}"
+                        th:selected="${tagId == tag.id}"
+                        th:text="${tag.name}">标签</option>
+            </select>
+            <button type="submit">搜索</button>
+        </form>
+    </section>
+
+    <section class="article-list" th:if="${!articlePage.empty}">
+        <article class="article-item" th:each="article : ${articlePage.content}">
+            <a class="article-title" th:href="@{/articles/{id}(id=${article.id})}" th:text="${article.title}">文章标题</a>
+            <div class="meta">
+                <span th:text="${article.author.username}">作者</span>
+                <span th:text="${article.category.name}">分类</span>
+                <time th:text="${#temporals.format(article.createdAt, 'yyyy-MM-dd HH:mm')}">时间</time>
+            </div>
+            <div class="tag-row">
+                <a th:each="tag : ${article.tags}" th:href="@{/(tagId=${tag.id})}" th:text="${tag.name}">标签</a>
+            </div>
+        </article>
+    </section>
+
+    <p class="empty" th:if="${articlePage.empty}">还没有文章。</p>
+
+    <nav class="pager" th:if="${articlePage.totalPages > 1}">
+        <a th:if="${articlePage.hasPrevious()}"
+           th:href="@{/(page=${articlePage.number - 1},keyword=${keyword},categoryId=${categoryId},tagId=${tagId})}">上一页</a>
+        <span th:text="${articlePage.number + 1} + ' / ' + ${articlePage.totalPages}">1 / 1</span>
+        <a th:if="${articlePage.hasNext()}"
+           th:href="@{/(page=${articlePage.number + 1},keyword=${keyword},categoryId=${categoryId},tagId=${tagId})}">下一页</a>
+    </nav>
+</main>
+</body>
+</html>
