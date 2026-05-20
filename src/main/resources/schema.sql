@@ -10,6 +10,7 @@ CREATE TABLE users (
     username VARCHAR(80) NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
     role VARCHAR(20) NOT NULL,
+    avatar_url VARCHAR(255),
     created_at DATETIME NOT NULL
 );
 

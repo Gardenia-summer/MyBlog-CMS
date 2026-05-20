@@ -9,7 +9,14 @@
 <body>
 <main class="page">
     <header class="site-header">
-        <a class="brand" th:href="@{/}">我的博客</a>
+        <div class="brand-area">
+            <a class="brand" th:href="@{/}">我的博客</a>
+            <a class="user-chip" th:if="${currentUser != null and currentUser.role.name() == 'USER'}" th:href="@{/me/profile}" aria-label="个人资料">
+                <img th:if="${!#strings.isEmpty(currentUser.avatarUrl)}" class="avatar" th:src="@{${currentUser.avatarUrl}}" alt="">
+                <span th:if="${#strings.isEmpty(currentUser.avatarUrl)}" class="avatar avatar-placeholder" th:text="${#strings.substring(currentUser.username, 0, 1)}">U</span>
+                <span class="user-chip-name" th:text="${currentUser.username}">用户</span>
+            </a>
+        </div>
         <nav class="nav">
             <a th:href="@{/}">首页</a>
             <a th:if="${currentUser != null}" th:href="@{/me/articles}">我的</a>

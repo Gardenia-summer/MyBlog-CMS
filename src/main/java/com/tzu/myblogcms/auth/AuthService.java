@@ -23,7 +23,12 @@ public class AuthService {
         return userRepository.findByUsername(username.trim())
                 .filter(user -> requiredRole == null || user.getRole() == requiredRole)
                 .filter(user -> passwordEncoder.matches(password, user.getPasswordHash()))
-                .map(user -> new SessionUser(user.getId(), user.getUsername(), user.getRole()))
+                .map(user -> new SessionUser(
+                        user.getId(),
+                        user.getUsername(),
+                        user.getRole(),
+                        user.getRole() == Role.USER ? user.getAvatarUrl() : null
+                ))
                 .orElse(null);
     }
 

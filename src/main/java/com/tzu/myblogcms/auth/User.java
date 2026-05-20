@@ -30,6 +30,9 @@ public class User {
     @Column(nullable = false, length = 20)
     private Role role;
 
+    @Column(name = "avatar_url", length = 255)
+    private String avatarUrl;
+
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -65,6 +68,14 @@ public class User {
 
     public Role getRole() {
         return role;
+    }
+
+    public String getAvatarUrl() {
+        return avatarUrl;
+    }
+
+    public void setAvatarUrl(String avatarUrl) {
+        this.avatarUrl = avatarUrl;
     }
 
     public LocalDateTime getCreatedAt() {

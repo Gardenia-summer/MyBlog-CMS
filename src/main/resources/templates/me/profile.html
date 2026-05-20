@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>我的文章</title>
+    <title>个人资料</title>
     <link rel="stylesheet" th:href="@{/style.css}">
 </head>
 <body>
@@ -19,31 +19,32 @@
         </div>
         <nav class="nav">
             <a th:href="@{/}">首页</a>
-            <a th:href="@{/me/articles/new}">发布文章</a>
+            <a th:href="@{/me/articles}">我的文章</a>
             <form th:action="@{/logout}" method="post"><button class="link-action" type="submit">退出</button></form>
         </nav>
     </header>
 
-    <h1>我的文章</h1>
-    <p class="error" th:if="${error}" th:text="${error}">操作失败</p>
-    <section class="article-list" th:if="${!articlePage.empty}">
-        <article class="article-item admin-item" th:each="article : ${articlePage.content}">
+    <section class="form-panel profile-panel">
+        <div class="profile-summary">
+            <img th:if="${!#strings.isEmpty(currentUser.avatarUrl)}" class="profile-avatar" th:src="@{${currentUser.avatarUrl}}" alt="">
+            <span th:if="${#strings.isEmpty(currentUser.avatarUrl)}" class="profile-avatar avatar-placeholder" th:text="${#strings.substring(currentUser.username, 0, 1)}">U</span>
             <div>
-                <a class="article-title" th:href="@{/articles/{id}(id=${article.id})}" th:text="${article.title}">文章标题</a>
-                <div class="meta">
-                    <span th:text="${article.category.name}">分类</span>
-                    <time th:text="${#temporals.format(article.createdAt, 'yyyy-MM-dd HH:mm')}">时间</time>
-                </div>
+                <h1>个人资料</h1>
+                <p class="empty" th:text="${currentUser.username}">用户名</p>
             </div>
-            <div class="actions">
-                <a class="button secondary" th:href="@{/me/articles/{id}/edit(id=${article.id})}">编辑</a>
-                <form th:action="@{/me/articles/{id}/delete(id=${article.id})}" method="post">
-                    <button class="danger" type="submit">删除</button>
-                </form>
-            </div>
-        </article>
+        </div>
+
+        <p class="success" th:if="${message}" th:text="${message}">头像已更新</p>
+        <p class="error" th:if="${error}" th:text="${error}">上传失败</p>
+
+        <form class="avatar-form" th:action="@{/me/profile/avatar}" method="post" enctype="multipart/form-data">
+            <label>更换头像
+                <input type="file" name="avatar" accept="image/jpeg,image/png,image/gif" required>
+            </label>
+            <p class="empty">支持 JPG、PNG、GIF，最大 2MB。</p>
+            <button type="submit">保存头像</button>
+        </form>
     </section>
-    <p class="empty" th:if="${articlePage.empty}">你还没有发布文章。</p>
 </main>
 </body>
 </html>

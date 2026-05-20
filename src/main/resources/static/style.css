@@ -25,6 +25,7 @@ a:hover {
 }
 
 .site-header,
+.brand-area,
 .nav,
 .actions,
 .admin-item,
@@ -52,6 +53,10 @@ a:hover {
     color: #202124;
     font-size: 24px;
     font-weight: 800;
+}
+
+.brand-area {
+    flex-wrap: wrap;
 }
 
 .nav {
@@ -111,6 +116,58 @@ h2 {
     font-size: 14px;
 }
 
+.user-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    max-width: 220px;
+    color: #202124;
+    font-weight: 700;
+}
+
+.user-chip:hover {
+    text-decoration: none;
+}
+
+.user-chip-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.avatar,
+.profile-avatar {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    border-radius: 50%;
+    background: #dfe7f3;
+    color: #174268;
+    font-weight: 800;
+    object-fit: cover;
+    text-transform: uppercase;
+}
+
+.avatar {
+    width: 36px;
+    height: 36px;
+    font-size: 16px;
+}
+
+.avatar-small {
+    width: 32px;
+    height: 32px;
+    font-size: 14px;
+}
+
+.profile-avatar {
+    width: 96px;
+    height: 96px;
+    font-size: 40px;
+}
+
 .tag-row {
     display: flex;
     flex-wrap: wrap;
@@ -146,6 +203,39 @@ h2 {
 .comment-item {
     padding: 12px 0;
     border-bottom: 1px solid #e3e6ea;
+}
+
+.comment-row,
+.profile-summary {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.comment-body {
+    flex: 1;
+    min-width: 0;
+}
+
+.comment-body p {
+    margin: 8px 0 0;
+}
+
+.profile-panel {
+    width: min(640px, 100%);
+}
+
+.profile-summary {
+    align-items: center;
+}
+
+.profile-summary h1 {
+    margin-bottom: 4px;
+}
+
+.avatar-form {
+    display: grid;
+    gap: 12px;
 }
 
 .auth-page {
@@ -277,9 +367,14 @@ button,
     }
 
     .nav,
+    .brand-area,
     .inline-form {
         align-items: stretch;
         flex-direction: column;
+    }
+
+    .user-chip {
+        max-width: 100%;
     }
 
     h1 {

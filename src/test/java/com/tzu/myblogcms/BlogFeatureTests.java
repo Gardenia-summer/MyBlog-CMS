@@ -6,6 +6,7 @@ import com.tzu.myblogcms.article.ArticleRepository;
 import com.tzu.myblogcms.article.ArticleService;
 import com.tzu.myblogcms.auth.AuthService;
 import com.tzu.myblogcms.auth.AuthSession;
+import com.tzu.myblogcms.auth.AvatarService;
 import com.tzu.myblogcms.auth.Role;
 import com.tzu.myblogcms.auth.SessionUser;
 import com.tzu.myblogcms.auth.User;
@@ -19,6 +20,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.mock.web.MockHttpSession;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -29,8 +32,10 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.hamcrest.Matchers.containsString;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
@@ -60,6 +65,9 @@ class BlogFeatureTests {
 
     @Autowired
     private AuthService authService;
+
+    @Autowired
+    private AvatarService avatarService;
 
     @Autowired
     private BCryptPasswordEncoder passwordEncoder;
@@ -160,6 +168,110 @@ class BlogFeatureTests {
         mockMvc.perform(get("/articles/" + article.getId()))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("Nice article")));
+    }
+
+    @Test
+    void userCanUploadAvatarAndSeeItInHeader() throws Exception {
+        User user = userRepository.save(new User("upload_avatar_case", passwordEncoder.encode("admin123"), Role.USER));
+        MockHttpSession session = new MockHttpSession();
+        session.setAttribute(AuthSession.LOGIN_USER, new SessionUser(user.getId(), user.getUsername(), Role.USER));
+        MockMultipartFile avatar = new MockMultipartFile(
+                "avatar",
+                "avatar.png",
+                "image/png",
+                new byte[]{1, 2, 3, 4}
+        );
+
+        mockMvc.perform(multipart("/me/profile/avatar")
+                        .file(avatar)
+                        .session(session))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/me/profile"));
+
+        User savedUser = userRepository.findById(user.getId()).orElseThrow();
+        assertThat(savedUser.getAvatarUrl())
+                .startsWith("/uploads/avatars/user-" + user.getId() + "-")
+                .endsWith(".png");
+
+        SessionUser sessionUser = (SessionUser) session.getAttribute(AuthSession.LOGIN_USER);
+        assertThat(sessionUser.avatarUrl()).isEqualTo(savedUser.getAvatarUrl());
+
+        mockMvc.perform(get("/").session(session))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString(savedUser.getAvatarUrl())))
+                .andExpect(content().string(containsString("upload_avatar_case")));
+    }
+
+    @Test
+    void invalidAvatarUploadsDoNotReplaceExistingAvatar() throws Exception {
+        User user = new User("invalid_avatar_case", passwordEncoder.encode("admin123"), Role.USER);
+        user.setAvatarUrl("/uploads/avatars/original.png");
+        user = userRepository.save(user);
+        MockHttpSession session = new MockHttpSession();
+        session.setAttribute(AuthSession.LOGIN_USER, new SessionUser(user.getId(), user.getUsername(), Role.USER, user.getAvatarUrl()));
+
+        MockMultipartFile emptyAvatar = new MockMultipartFile("avatar", "empty.png", "image/png", new byte[0]);
+        mockMvc.perform(multipart("/me/profile/avatar")
+                        .file(emptyAvatar)
+                        .session(session))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/me/profile"));
+        assertThat(userRepository.findById(user.getId()).orElseThrow().getAvatarUrl())
+                .isEqualTo("/uploads/avatars/original.png");
+
+        MockMultipartFile textAvatar = new MockMultipartFile("avatar", "avatar.txt", "text/plain", "nope".getBytes());
+        mockMvc.perform(multipart("/me/profile/avatar")
+                        .file(textAvatar)
+                        .session(session))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/me/profile"));
+        assertThat(userRepository.findById(user.getId()).orElseThrow().getAvatarUrl())
+                .isEqualTo("/uploads/avatars/original.png");
+
+        MockMultipartFile oversizedAvatar = new MockMultipartFile(
+                "avatar",
+                "big.png",
+                "image/png",
+                new byte[2 * 1024 * 1024 + 1]
+        );
+        Long userId = user.getId();
+        assertThatThrownBy(() -> avatarService.updateAvatar(userId, oversizedAvatar))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("2MB");
+        assertThat(userRepository.findById(user.getId()).orElseThrow().getAvatarUrl())
+                .isEqualTo("/uploads/avatars/original.png");
+    }
+
+    @Test
+    void commentsShowUserAvatarsButNotAdminAvatars() throws Exception {
+        User articleAuthor = userRepository.save(new User("comment_article_author_case", passwordEncoder.encode("admin123"), Role.USER));
+        User avatarUser = new User("comment_avatar_user_case", passwordEncoder.encode("admin123"), Role.USER);
+        avatarUser.setAvatarUrl("/uploads/avatars/comment-user.png");
+        avatarUser = userRepository.save(avatarUser);
+        User defaultAvatarUser = userRepository.save(new User("comment_default_user_case", passwordEncoder.encode("admin123"), Role.USER));
+        User admin = new User("comment_admin_avatar_case", passwordEncoder.encode("admin123"), Role.ADMIN);
+        admin.setAvatarUrl("/uploads/avatars/admin-hidden.png");
+        admin = userRepository.save(admin);
+        Category category = categoryRepository.save(new Category("Avatar Comment Category Case"));
+        Article article = articleService.createArticle(form("Avatar Comments Article", "Content", category, List.of()), articleAuthor.getId());
+        commentRepository.save(new com.tzu.myblogcms.comment.Comment(article, avatarUser, "Avatar comment"));
+        commentRepository.save(new com.tzu.myblogcms.comment.Comment(article, defaultAvatarUser, "Default avatar comment"));
+        commentRepository.save(new com.tzu.myblogcms.comment.Comment(article, admin, "Admin name only comment"));
+
+        String html = mockMvc.perform(get("/articles/" + article.getId()))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        assertThat(html)
+                .contains("/uploads/avatars/comment-user.png")
+                .contains("Avatar comment")
+                .contains("Default avatar comment")
+                .contains("avatar-placeholder")
+                .contains("Admin name only comment")
+                .contains("comment_admin_avatar_case")
+                .doesNotContain("/uploads/avatars/admin-hidden.png");
     }
 
     @Test
