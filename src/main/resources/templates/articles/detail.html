@@ -10,7 +10,7 @@
 <main class="page">
     <header class="site-header">
         <div class="brand-area">
-            <a class="brand" th:href="@{/}">我的博客</a>
+            <a class="brand" th:href="${currentUser != null and currentUser.role.name() == 'ADMIN'} ? @{/admin/articles} : @{/}">我的博客</a>
             <a class="user-chip" th:if="${currentUser != null and currentUser.role.name() == 'USER'}" th:href="@{/me/profile}" aria-label="个人资料">
                 <img th:if="${!#strings.isEmpty(currentUser.avatarUrl)}" class="avatar" th:src="@{${currentUser.avatarUrl}}" alt="">
                 <span th:if="${#strings.isEmpty(currentUser.avatarUrl)}" class="avatar avatar-placeholder" th:text="${#strings.substring(currentUser.username, 0, 1)}">U</span>
@@ -18,8 +18,9 @@
             </a>
         </div>
         <nav class="nav">
-            <a th:href="@{/}">首页</a>
-            <a th:if="${currentUser != null}" th:href="@{/me/articles}">我的</a>
+            <a th:if="${currentUser == null or currentUser.role.name() == 'USER'}" th:href="@{/}">首页</a>
+            <a th:if="${currentUser != null and currentUser.role.name() == 'ADMIN'}" th:href="@{/admin/articles}">后台</a>
+            <a th:if="${currentUser != null and currentUser.role.name() == 'USER'}" th:href="@{/me/articles}">我的</a>
             <a th:if="${currentUser == null}" th:href="@{/login}">登录</a>
         </nav>
     </header>
@@ -40,7 +41,7 @@
     <section class="comments">
         <h2>评论</h2>
         <p class="error" th:if="${error}" th:text="${error}">评论不能为空</p>
-        <form class="comment-form" th:if="${currentUser != null}" th:action="@{/articles/{id}/comments(id=${article.id})}" method="post">
+        <form class="comment-form" th:if="${currentUser != null and currentUser.role.name() == 'USER'}" th:action="@{/articles/{id}/comments(id=${article.id})}" method="post">
             <textarea name="content" rows="4" placeholder="写下你的评论" required></textarea>
             <button type="submit">发表评论</button>
         </form>

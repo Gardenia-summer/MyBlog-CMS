@@ -1,6 +1,7 @@
 package com.tzu.myblogcms.config;
 
 import com.tzu.myblogcms.auth.AuthSession;
+import com.tzu.myblogcms.auth.Role;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.stereotype.Component;
@@ -11,8 +12,12 @@ public class UserLoginInterceptor implements HandlerInterceptor {
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
-        if (AuthSession.isLoggedIn(request.getSession(false))) {
+        if (AuthSession.hasRole(request.getSession(false), Role.USER)) {
             return true;
+        }
+        if (AuthSession.hasRole(request.getSession(false), Role.ADMIN)) {
+            response.sendRedirect(request.getContextPath() + "/admin/articles");
+            return false;
         }
         response.sendRedirect(request.getContextPath() + "/login");
         return false;

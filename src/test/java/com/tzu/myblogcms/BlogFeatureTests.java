@@ -277,6 +277,7 @@ class BlogFeatureTests {
     @Test
     void protectedPagesRedirectByRole() throws Exception {
         User user = userRepository.save(new User("protected_user_case", passwordEncoder.encode("admin123"), Role.USER));
+        User admin = userRepository.save(new User("protected_admin_case", passwordEncoder.encode("admin123"), Role.ADMIN));
 
         mockMvc.perform(get("/me/articles"))
                 .andExpect(status().is3xxRedirection())
@@ -286,6 +287,31 @@ class BlogFeatureTests {
                         .sessionAttr(AuthSession.LOGIN_USER, new SessionUser(user.getId(), user.getUsername(), Role.USER)))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/admin/login"));
+
+        mockMvc.perform(get("/me/articles")
+                        .sessionAttr(AuthSession.LOGIN_USER, new SessionUser(admin.getId(), admin.getUsername(), Role.ADMIN)))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/admin/articles"));
+    }
+
+    @Test
+    void adminArticleDetailKeepsAdminNavigation() throws Exception {
+        User admin = userRepository.save(new User("admin_detail_nav_case", passwordEncoder.encode("admin123"), Role.ADMIN));
+        User author = userRepository.save(new User("detail_nav_author_case", passwordEncoder.encode("admin123"), Role.USER));
+        Category category = categoryRepository.save(new Category("Detail Nav Category Case"));
+        Article article = articleService.createArticle(form("Detail Navigation Article", "Content", category, List.of()), author.getId());
+
+        String html = mockMvc.perform(get("/articles/" + article.getId())
+                        .sessionAttr(AuthSession.LOGIN_USER, new SessionUser(admin.getId(), admin.getUsername(), Role.ADMIN)))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        assertThat(html)
+                .contains("href=\"/admin/articles\"")
+                .doesNotContain("href=\"/me/articles\"")
+                .doesNotContain("action=\"/articles/" + article.getId() + "/comments\"");
     }
 
     @Test
