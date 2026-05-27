@@ -6,6 +6,7 @@ import com.tzu.myblogcms.auth.SessionUser;
 import com.tzu.myblogcms.category.CategoryService;
 import com.tzu.myblogcms.comment.CommentService;
 import com.tzu.myblogcms.tag.TagService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -42,7 +43,7 @@ public class PublicBlogController {
                         @RequestParam(required = false) String keyword,
                         @RequestParam(required = false) Long categoryId,
                         @RequestParam(required = false) Long tagId,
-                        HttpSession session,
+                        HttpServletRequest request,
                         Model model) {
         int pageIndex = Math.max(page, 0);
         model.addAttribute("articlePage", articleService.searchArticles(
@@ -56,17 +57,17 @@ public class PublicBlogController {
         model.addAttribute("keyword", keyword);
         model.addAttribute("categoryId", categoryId);
         model.addAttribute("tagId", tagId);
-        model.addAttribute("currentUser", AuthSession.currentUser(session).orElse(null));
+        model.addAttribute("currentUser", AuthSession.currentUser(request.getSession(false)).orElse(null));
         return "articles/list";
     }
 
     @GetMapping("/articles/{id}")
-    public String detail(@PathVariable Long id, HttpSession session, Model model) {
+    public String detail(@PathVariable Long id, HttpServletRequest request, Model model) {
         var article = articleService.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         model.addAttribute("article", article);
         model.addAttribute("comments", commentService.listByArticle(article));
-        model.addAttribute("currentUser", AuthSession.currentUser(session).orElse(null));
+        model.addAttribute("currentUser", AuthSession.currentUser(request.getSession(false)).orElse(null));
         return "articles/detail";
     }
 

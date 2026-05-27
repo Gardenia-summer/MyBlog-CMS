@@ -171,6 +171,25 @@ class BlogFeatureTests {
     }
 
     @Test
+    void anonymousPublicPagesDoNotCreateSessionOrRewriteLinks() throws Exception {
+        User author = userRepository.save(new User("anonymous_public_author_case", passwordEncoder.encode("admin123"), Role.USER));
+        Category category = categoryRepository.save(new Category("Anonymous Public Category Case"));
+        Article article = articleService.createArticle(form("Anonymous Public Article", "Content", category, List.of()), author.getId());
+
+        var homeResult = mockMvc.perform(get("/"))
+                .andExpect(status().isOk())
+                .andReturn();
+        assertThat(homeResult.getRequest().getSession(false)).isNull();
+        assertThat(homeResult.getResponse().getContentAsString()).doesNotContain(";jsessionid");
+
+        var detailResult = mockMvc.perform(get("/articles/" + article.getId()))
+                .andExpect(status().isOk())
+                .andReturn();
+        assertThat(detailResult.getRequest().getSession(false)).isNull();
+        assertThat(detailResult.getResponse().getContentAsString()).doesNotContain(";jsessionid");
+    }
+
+    @Test
     void userCanUploadAvatarAndSeeItInHeader() throws Exception {
         User user = userRepository.save(new User("upload_avatar_case", passwordEncoder.encode("admin123"), Role.USER));
         MockHttpSession session = new MockHttpSession();
