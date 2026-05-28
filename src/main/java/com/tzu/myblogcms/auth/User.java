@@ -23,6 +23,9 @@ public class User {
     @Column(nullable = false, unique = true, length = 80)
     private String username;
 
+    @Column(nullable = false, length = 80)
+    private String nickname;
+
     @Column(name = "password_hash", nullable = false)
     private String passwordHash;
 
@@ -45,12 +48,16 @@ public class User {
 
     public User(String username, String passwordHash, Role role) {
         this.username = username;
+        this.nickname = username;
         this.passwordHash = passwordHash;
         this.role = role;
     }
 
     @PrePersist
     void prePersist() {
+        if (this.nickname == null || this.nickname.isBlank()) {
+            this.nickname = this.username;
+        }
         this.createdAt = LocalDateTime.now();
     }
 
@@ -60,6 +67,14 @@ public class User {
 
     public String getUsername() {
         return username;
+    }
+
+    public String getNickname() {
+        return nickname;
+    }
+
+    public void updateNickname(String nickname) {
+        this.nickname = nickname;
     }
 
     public String getPasswordHash() {

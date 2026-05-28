@@ -22,7 +22,7 @@
     <section class="table-list" th:if="${!commentPage.empty}">
         <article class="row-item" th:each="comment : ${commentPage.content}">
             <div>
-                <strong th:text="${comment.author.username}">评论用户</strong>
+                <strong th:text="${comment.author.nickname}">评论用户</strong>
                 <a th:href="@{/articles/{id}(id=${comment.article.id})}" th:text="${comment.article.title}">文章</a>
                 <p th:text="${comment.content}">评论内容</p>
             </div>

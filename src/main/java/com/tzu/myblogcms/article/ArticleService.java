@@ -139,6 +139,7 @@ public class ArticleService {
         return contains(article.getTitle(), needle)
                 || contains(article.getContent(), needle)
                 || contains(article.getAuthor().getUsername(), needle)
+                || contains(article.getAuthor().getNickname(), needle)
                 || contains(article.getCategory().getName(), needle)
                 || article.getTags().stream().anyMatch(tag -> contains(tag.getName(), needle));
     }

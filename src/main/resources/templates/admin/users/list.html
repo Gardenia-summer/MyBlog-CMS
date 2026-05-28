@@ -23,6 +23,7 @@
         <article class="row-item" th:each="user : ${users}">
             <div>
                 <strong th:text="${user.username}">用户名</strong>
+                <span class="meta">昵称：<span th:text="${user.nickname}">昵称</span></span>
                 <span class="meta" th:text="${user.role}">角色</span>
             </div>
             <form th:action="@{/admin/users/{id}/delete(id=${user.id})}" method="post">

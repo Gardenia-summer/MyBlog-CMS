@@ -8,6 +8,7 @@ DROP TABLE IF EXISTS users;
 CREATE TABLE users (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     username VARCHAR(80) NOT NULL UNIQUE,
+    nickname VARCHAR(80) NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
     role VARCHAR(20) NOT NULL,
     avatar_url VARCHAR(255),

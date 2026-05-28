@@ -10,6 +10,7 @@ import com.tzu.myblogcms.auth.AvatarService;
 import com.tzu.myblogcms.auth.Role;
 import com.tzu.myblogcms.auth.SessionUser;
 import com.tzu.myblogcms.auth.User;
+import com.tzu.myblogcms.auth.UserProfileService;
 import com.tzu.myblogcms.auth.UserRepository;
 import com.tzu.myblogcms.category.Category;
 import com.tzu.myblogcms.category.CategoryRepository;
@@ -70,6 +71,9 @@ class BlogFeatureTests {
     private AvatarService avatarService;
 
     @Autowired
+    private UserProfileService userProfileService;
+
+    @Autowired
     private BCryptPasswordEncoder passwordEncoder;
 
     @Autowired
@@ -86,6 +90,7 @@ class BlogFeatureTests {
                 .andExpect(redirectedUrl("/login"));
 
         assertThat(authService.authenticate(username, "admin123", Role.USER)).isNotNull();
+        assertThat(userRepository.findByUsername(username).orElseThrow().getNickname()).isEqualTo(username);
 
         mockMvc.perform(post("/login")
                         .param("username", username)
@@ -168,6 +173,82 @@ class BlogFeatureTests {
         mockMvc.perform(get("/articles/" + article.getId()))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("Nice article")));
+    }
+
+    @Test
+    void userCanUpdateNicknameWithoutChangingLoginUsername() throws Exception {
+        User user = userRepository.save(new User("nickname_login_case", passwordEncoder.encode("admin123"), Role.USER));
+        MockHttpSession session = new MockHttpSession();
+        session.setAttribute(AuthSession.LOGIN_USER, new SessionUser(user.getId(), user.getUsername(), Role.USER));
+
+        mockMvc.perform(post("/me/profile/nickname")
+                        .session(session)
+                        .param("nickname", "New Display Name"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/me/profile"));
+
+        User savedUser = userRepository.findById(user.getId()).orElseThrow();
+        assertThat(savedUser.getUsername()).isEqualTo("nickname_login_case");
+        assertThat(savedUser.getNickname()).isEqualTo("New Display Name");
+        assertThat(authService.authenticate("nickname_login_case", "admin123", Role.USER)).isNotNull();
+
+        SessionUser sessionUser = (SessionUser) session.getAttribute(AuthSession.LOGIN_USER);
+        assertThat(sessionUser.username()).isEqualTo("nickname_login_case");
+        assertThat(sessionUser.nickname()).isEqualTo("New Display Name");
+    }
+
+    @Test
+    void emptyNicknameDoesNotReplaceExistingNickname() throws Exception {
+        User user = new User("empty_nickname_case", passwordEncoder.encode("admin123"), Role.USER);
+        user.updateNickname("Original Nickname");
+        user = userRepository.save(user);
+        MockHttpSession session = new MockHttpSession();
+        session.setAttribute(AuthSession.LOGIN_USER, new SessionUser(user.getId(), user.getUsername(), user.getNickname(), Role.USER, null));
+
+        mockMvc.perform(post("/me/profile/nickname")
+                        .session(session)
+                        .param("nickname", "   "))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/me/profile"));
+
+        assertThat(userRepository.findById(user.getId()).orElseThrow().getNickname()).isEqualTo("Original Nickname");
+        assertThat(((SessionUser) session.getAttribute(AuthSession.LOGIN_USER)).nickname()).isEqualTo("Original Nickname");
+    }
+
+    @Test
+    void publicAuthorAndCommentsUseNicknameInsteadOfUsername() throws Exception {
+        User author = new User("hidden_author_username_case", passwordEncoder.encode("admin123"), Role.USER);
+        author.updateNickname("Visible Author Nickname");
+        author = userRepository.save(author);
+        User commenter = new User("hidden_comment_username_case", passwordEncoder.encode("admin123"), Role.USER);
+        commenter.updateNickname("Visible Comment Nickname");
+        commenter = userRepository.save(commenter);
+        Category category = categoryRepository.save(new Category("Nickname Category Case"));
+        Article article = articleService.createArticle(
+                form("Nickname Display Article", "Nickname body", category, List.of()),
+                author.getId()
+        );
+        commentRepository.save(new com.tzu.myblogcms.comment.Comment(article, commenter, "Nickname comment"));
+
+        String homeHtml = mockMvc.perform(get("/"))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        assertThat(homeHtml)
+                .contains("Visible Author Nickname")
+                .doesNotContain("hidden_author_username_case");
+
+        String detailHtml = mockMvc.perform(get("/articles/" + article.getId()))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        assertThat(detailHtml)
+                .contains("Visible Author Nickname")
+                .contains("Visible Comment Nickname")
+                .doesNotContain("hidden_author_username_case")
+                .doesNotContain("hidden_comment_username_case");
     }
 
     @Test

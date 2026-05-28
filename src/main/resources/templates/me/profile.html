@@ -13,8 +13,8 @@
             <a class="brand" th:href="@{/}">我的博客</a>
             <a class="user-chip" th:href="@{/me/profile}" aria-label="个人资料">
                 <img th:if="${!#strings.isEmpty(currentUser.avatarUrl)}" class="avatar" th:src="@{${currentUser.avatarUrl}}" alt="">
-                <span th:if="${#strings.isEmpty(currentUser.avatarUrl)}" class="avatar avatar-placeholder" th:text="${#strings.substring(currentUser.username, 0, 1)}">U</span>
-                <span class="user-chip-name" th:text="${currentUser.username}">用户</span>
+                <span th:if="${#strings.isEmpty(currentUser.avatarUrl)}" class="avatar avatar-placeholder" th:text="${#strings.substring(currentUser.nickname, 0, 1)}">U</span>
+                <span class="user-chip-name" th:text="${currentUser.nickname}">用户</span>
             </a>
         </div>
         <nav class="nav">
@@ -27,15 +27,24 @@
     <section class="form-panel profile-panel">
         <div class="profile-summary">
             <img th:if="${!#strings.isEmpty(currentUser.avatarUrl)}" class="profile-avatar" th:src="@{${currentUser.avatarUrl}}" alt="">
-            <span th:if="${#strings.isEmpty(currentUser.avatarUrl)}" class="profile-avatar avatar-placeholder" th:text="${#strings.substring(currentUser.username, 0, 1)}">U</span>
+            <span th:if="${#strings.isEmpty(currentUser.avatarUrl)}" class="profile-avatar avatar-placeholder" th:text="${#strings.substring(currentUser.nickname, 0, 1)}">U</span>
             <div>
                 <h1>个人资料</h1>
-                <p class="empty" th:text="${currentUser.username}">用户名</p>
+                <p class="empty">用户名：<span th:text="${currentUser.username}">username</span></p>
+                <p class="empty">昵称：<span th:text="${currentUser.nickname}">nickname</span></p>
             </div>
         </div>
 
-        <p class="success" th:if="${message}" th:text="${message}">头像已更新</p>
-        <p class="error" th:if="${error}" th:text="${error}">上传失败</p>
+        <p class="success" th:if="${message}" th:text="${message}">资料已更新</p>
+        <p class="error" th:if="${error}" th:text="${error}">更新失败</p>
+
+        <form class="avatar-form" th:action="@{/me/profile/nickname}" method="post">
+            <label>修改昵称
+                <input type="text" name="nickname" maxlength="80" th:value="${currentUser.nickname}" required>
+            </label>
+            <p class="empty">登录用户名不变，博客作者和评论会显示这个昵称。</p>
+            <button type="submit">保存昵称</button>
+        </form>
 
         <form class="avatar-form" th:action="@{/me/profile/avatar}" method="post" enctype="multipart/form-data">
             <label>更换头像

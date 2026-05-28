@@ -13,8 +13,8 @@
             <a class="brand" th:href="${currentUser != null and currentUser.role.name() == 'ADMIN'} ? @{/admin/articles} : @{/}">我的博客</a>
             <a class="user-chip" th:if="${currentUser != null and currentUser.role.name() == 'USER'}" th:href="@{/me/profile}" aria-label="个人资料">
                 <img th:if="${!#strings.isEmpty(currentUser.avatarUrl)}" class="avatar" th:src="@{${currentUser.avatarUrl}}" alt="">
-                <span th:if="${#strings.isEmpty(currentUser.avatarUrl)}" class="avatar avatar-placeholder" th:text="${#strings.substring(currentUser.username, 0, 1)}">U</span>
-                <span class="user-chip-name" th:text="${currentUser.username}">用户</span>
+                <span th:if="${#strings.isEmpty(currentUser.avatarUrl)}" class="avatar avatar-placeholder" th:text="${#strings.substring(currentUser.nickname, 0, 1)}">U</span>
+                <span class="user-chip-name" th:text="${currentUser.nickname}">用户</span>
             </a>
         </div>
         <nav class="nav">
@@ -34,17 +34,11 @@
             <input type="search" name="keyword" placeholder="搜索标题、正文、作者、分类或标签" th:value="${keyword}">
             <select name="categoryId">
                 <option value="">全部分类</option>
-                <option th:each="category : ${categories}"
-                        th:value="${category.id}"
-                        th:selected="${categoryId == category.id}"
-                        th:text="${category.name}">分类</option>
+                <option th:each="category : ${categories}" th:value="${category.id}" th:selected="${categoryId == category.id}" th:text="${category.name}">分类</option>
             </select>
             <select name="tagId">
                 <option value="">全部标签</option>
-                <option th:each="tag : ${tags}"
-                        th:value="${tag.id}"
-                        th:selected="${tagId == tag.id}"
-                        th:text="${tag.name}">标签</option>
+                <option th:each="tag : ${tags}" th:value="${tag.id}" th:selected="${tagId == tag.id}" th:text="${tag.name}">标签</option>
             </select>
             <button type="submit">搜索</button>
         </form>
@@ -54,7 +48,7 @@
         <article class="article-item" th:each="article : ${articlePage.content}">
             <a class="article-title" th:href="@{/articles/{id}(id=${article.id})}" th:text="${article.title}">文章标题</a>
             <div class="meta">
-                <span th:text="${article.author.username}">作者</span>
+                <span th:text="${article.author.nickname}">作者</span>
                 <span th:text="${article.category.name}">分类</span>
                 <time th:text="${#temporals.format(article.createdAt, 'yyyy-MM-dd HH:mm')}">时间</time>
             </div>
@@ -67,11 +61,9 @@
     <p class="empty" th:if="${articlePage.empty}">还没有文章。</p>
 
     <nav class="pager" th:if="${articlePage.totalPages > 1}">
-        <a th:if="${articlePage.hasPrevious()}"
-           th:href="@{/(page=${articlePage.number - 1},keyword=${keyword},categoryId=${categoryId},tagId=${tagId})}">上一页</a>
+        <a th:if="${articlePage.hasPrevious()}" th:href="@{/(page=${articlePage.number - 1},keyword=${keyword},categoryId=${categoryId},tagId=${tagId})}">上一页</a>
         <span th:text="${articlePage.number + 1} + ' / ' + ${articlePage.totalPages}">1 / 1</span>
-        <a th:if="${articlePage.hasNext()}"
-           th:href="@{/(page=${articlePage.number + 1},keyword=${keyword},categoryId=${categoryId},tagId=${tagId})}">下一页</a>
+        <a th:if="${articlePage.hasNext()}" th:href="@{/(page=${articlePage.number + 1},keyword=${keyword},categoryId=${categoryId},tagId=${tagId})}">下一页</a>
     </nav>
 </main>
 </body>

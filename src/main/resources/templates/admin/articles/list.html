@@ -33,7 +33,7 @@
             <div>
                 <a class="article-title" th:href="@{/articles/{id}(id=${article.id})}" th:text="${article.title}">文章标题</a>
                 <div class="meta">
-                    <span th:text="${article.author.username}">作者</span>
+                    <span th:text="${article.author.nickname}">作者</span>
                     <span th:text="${article.category.name}">分类</span>
                     <time th:text="${#temporals.format(article.createdAt, 'yyyy-MM-dd HH:mm')}">时间</time>
                 </div>

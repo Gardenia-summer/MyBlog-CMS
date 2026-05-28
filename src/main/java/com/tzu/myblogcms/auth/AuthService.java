@@ -26,6 +26,7 @@ public class AuthService {
                 .map(user -> new SessionUser(
                         user.getId(),
                         user.getUsername(),
+                        user.getNickname(),
                         user.getRole(),
                         user.getRole() == Role.USER ? user.getAvatarUrl() : null
                 ))
