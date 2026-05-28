@@ -12,6 +12,7 @@ CREATE TABLE users (
     password_hash VARCHAR(255) NOT NULL,
     role VARCHAR(20) NOT NULL,
     avatar_url VARCHAR(255),
+    bio VARCHAR(300),
     created_at DATETIME NOT NULL
 );
 

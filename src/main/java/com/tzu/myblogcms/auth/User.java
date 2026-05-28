@@ -16,6 +16,8 @@ import java.time.LocalDateTime;
 @Table(name = "users")
 public class User {
 
+    public static final String DEFAULT_BIO = "这个用户很懒~什么都没有写~";
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -36,6 +38,9 @@ public class User {
     @Column(name = "avatar_url", length = 255)
     private String avatarUrl;
 
+    @Column(length = 300)
+    private String bio;
+
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -51,12 +56,18 @@ public class User {
         this.nickname = username;
         this.passwordHash = passwordHash;
         this.role = role;
+        if (role == Role.USER) {
+            this.bio = DEFAULT_BIO;
+        }
     }
 
     @PrePersist
     void prePersist() {
         if (this.nickname == null || this.nickname.isBlank()) {
             this.nickname = this.username;
+        }
+        if (this.role == Role.USER && (this.bio == null || this.bio.isBlank())) {
+            this.bio = DEFAULT_BIO;
         }
         this.createdAt = LocalDateTime.now();
     }
@@ -91,6 +102,14 @@ public class User {
 
     public void setAvatarUrl(String avatarUrl) {
         this.avatarUrl = avatarUrl;
+    }
+
+    public String getBio() {
+        return bio;
+    }
+
+    public void updateBio(String bio) {
+        this.bio = bio;
     }
 
     public LocalDateTime getCreatedAt() {

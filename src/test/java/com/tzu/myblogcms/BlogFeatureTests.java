@@ -90,7 +90,9 @@ class BlogFeatureTests {
                 .andExpect(redirectedUrl("/login"));
 
         assertThat(authService.authenticate(username, "admin123", Role.USER)).isNotNull();
-        assertThat(userRepository.findByUsername(username).orElseThrow().getNickname()).isEqualTo(username);
+        User registeredUser = userRepository.findByUsername(username).orElseThrow();
+        assertThat(registeredUser.getNickname()).isEqualTo(username);
+        assertThat(registeredUser.getBio()).isEqualTo(User.DEFAULT_BIO);
 
         mockMvc.perform(post("/login")
                         .param("username", username)
@@ -108,6 +110,7 @@ class BlogFeatureTests {
     @Test
     void adminCanLoginOnlyWithAdminRole() throws Exception {
         User admin = userRepository.save(new User("admin_login_case", passwordEncoder.encode("admin123"), Role.ADMIN));
+        assertThat(admin.getBio()).isNull();
 
         mockMvc.perform(post("/admin/login")
                         .param("username", admin.getUsername())
@@ -195,6 +198,7 @@ class BlogFeatureTests {
         SessionUser sessionUser = (SessionUser) session.getAttribute(AuthSession.LOGIN_USER);
         assertThat(sessionUser.username()).isEqualTo("nickname_login_case");
         assertThat(sessionUser.nickname()).isEqualTo("New Display Name");
+        assertThat(sessionUser.bio()).isEqualTo(User.DEFAULT_BIO);
     }
 
     @Test
@@ -213,6 +217,59 @@ class BlogFeatureTests {
 
         assertThat(userRepository.findById(user.getId()).orElseThrow().getNickname()).isEqualTo("Original Nickname");
         assertThat(((SessionUser) session.getAttribute(AuthSession.LOGIN_USER)).nickname()).isEqualTo("Original Nickname");
+    }
+
+    @Test
+    void userCanViewAndUpdateBioOnProfile() throws Exception {
+        User user = userRepository.save(new User("profile_bio_case", passwordEncoder.encode("admin123"), Role.USER));
+        MockHttpSession session = new MockHttpSession();
+        session.setAttribute(AuthSession.LOGIN_USER,
+                new SessionUser(user.getId(), user.getUsername(), user.getNickname(), Role.USER, null, user.getBio()));
+
+        mockMvc.perform(get("/me/profile").session(session))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString(User.DEFAULT_BIO)))
+                .andExpect(content().string(containsString("action=\"/me/profile/bio\"")));
+
+        mockMvc.perform(post("/me/profile/bio")
+                        .session(session)
+                        .param("bio", "  我正在认真写博客  "))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/me/profile"));
+
+        User savedUser = userRepository.findById(user.getId()).orElseThrow();
+        assertThat(savedUser.getBio()).isEqualTo("我正在认真写博客");
+
+        SessionUser sessionUser = (SessionUser) session.getAttribute(AuthSession.LOGIN_USER);
+        assertThat(sessionUser.bio()).isEqualTo("我正在认真写博客");
+        assertThat(sessionUser.nickname()).isEqualTo(user.getNickname());
+    }
+
+    @Test
+    void invalidBioDoesNotReplaceExistingBio() throws Exception {
+        User user = new User("invalid_bio_case", passwordEncoder.encode("admin123"), Role.USER);
+        user.updateBio("Original Bio");
+        user = userRepository.save(user);
+        MockHttpSession session = new MockHttpSession();
+        session.setAttribute(AuthSession.LOGIN_USER,
+                new SessionUser(user.getId(), user.getUsername(), user.getNickname(), Role.USER, null, user.getBio()));
+
+        mockMvc.perform(post("/me/profile/bio")
+                        .session(session)
+                        .param("bio", "   "))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/me/profile"));
+        assertThat(userRepository.findById(user.getId()).orElseThrow().getBio()).isEqualTo("Original Bio");
+        assertThat(((SessionUser) session.getAttribute(AuthSession.LOGIN_USER)).bio()).isEqualTo("Original Bio");
+
+        String tooLongBio = "a".repeat(301);
+        mockMvc.perform(post("/me/profile/bio")
+                        .session(session)
+                        .param("bio", tooLongBio))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/me/profile"));
+        assertThat(userRepository.findById(user.getId()).orElseThrow().getBio()).isEqualTo("Original Bio");
+        assertThat(((SessionUser) session.getAttribute(AuthSession.LOGIN_USER)).bio()).isEqualTo("Original Bio");
     }
 
     @Test
@@ -295,6 +352,7 @@ class BlogFeatureTests {
 
         SessionUser sessionUser = (SessionUser) session.getAttribute(AuthSession.LOGIN_USER);
         assertThat(sessionUser.avatarUrl()).isEqualTo(savedUser.getAvatarUrl());
+        assertThat(sessionUser.bio()).isEqualTo(User.DEFAULT_BIO);
 
         mockMvc.perform(get("/").session(session))
                 .andExpect(status().isOk())

@@ -32,6 +32,7 @@
                 <h1>个人资料</h1>
                 <p class="empty">用户名：<span th:text="${currentUser.username}">username</span></p>
                 <p class="empty">昵称：<span th:text="${currentUser.nickname}">nickname</span></p>
+                <p class="empty">简介：<span th:text="${currentUser.bio}">这个用户很懒~什么都没有写~</span></p>
             </div>
         </div>
 
@@ -44,6 +45,14 @@
             </label>
             <p class="empty">登录用户名不变，博客作者和评论会显示这个昵称。</p>
             <button type="submit">保存昵称</button>
+        </form>
+
+        <form class="avatar-form" th:action="@{/me/profile/bio}" method="post">
+            <label>修改简介
+                <textarea name="bio" rows="5" maxlength="300" required th:text="${currentUser.bio}">这个用户很懒~什么都没有写~</textarea>
+            </label>
+            <p class="empty">最多 300 字，只在“我的/个人资料”里展示。</p>
+            <button type="submit">保存简介</button>
         </form>
 
         <form class="avatar-form" th:action="@{/me/profile/avatar}" method="post" enctype="multipart/form-data">

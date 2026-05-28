@@ -59,4 +59,19 @@ public class ProfileController {
         }
         return "redirect:/me/profile";
     }
+
+    @PostMapping("/me/profile/bio")
+    public String updateBio(@RequestParam("bio") String bio,
+                            HttpSession session,
+                            RedirectAttributes redirectAttributes) {
+        SessionUser currentUser = AuthSession.currentUser(session).orElseThrow();
+        try {
+            SessionUser updatedUser = userProfileService.updateBio(currentUser.id(), bio);
+            session.setAttribute(AuthSession.LOGIN_USER, updatedUser);
+            redirectAttributes.addFlashAttribute("message", "简介已更新");
+        } catch (IllegalArgumentException ex) {
+            redirectAttributes.addFlashAttribute("error", ex.getMessage());
+        }
+        return "redirect:/me/profile";
+    }
 }

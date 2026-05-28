@@ -28,7 +28,8 @@ public class AuthService {
                         user.getUsername(),
                         user.getNickname(),
                         user.getRole(),
-                        user.getRole() == Role.USER ? user.getAvatarUrl() : null
+                        user.getRole() == Role.USER ? user.getAvatarUrl() : null,
+                        user.getRole() == Role.USER ? user.getBio() : null
                 ))
                 .orElse(null);
     }

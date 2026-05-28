@@ -44,7 +44,7 @@ public class AvatarService {
         String newAvatarUrl = storeAvatar(user.getId(), avatar);
         user.setAvatarUrl(newAvatarUrl);
         deleteOldAvatar(oldAvatarUrl, newAvatarUrl);
-        return new SessionUser(user.getId(), user.getUsername(), user.getNickname(), user.getRole(), user.getAvatarUrl());
+        return new SessionUser(user.getId(), user.getUsername(), user.getNickname(), user.getRole(), user.getAvatarUrl(), user.getBio());
     }
 
     private String storeAvatar(Long userId, MultipartFile avatar) {
