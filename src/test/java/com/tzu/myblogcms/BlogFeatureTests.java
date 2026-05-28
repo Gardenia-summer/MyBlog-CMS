@@ -560,6 +560,26 @@ class BlogFeatureTests {
                 .findFirst()
                 .orElseThrow();
 
+        String categoriesHtml = mockMvc.perform(get("/admin/categories")
+                        .sessionAttr(AuthSession.LOGIN_USER, sessionUser))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        assertThat(categoriesHtml)
+                .contains("Admin Category Case")
+                .doesNotContain("保存");
+
+        String tagsHtml = mockMvc.perform(get("/admin/tags")
+                        .sessionAttr(AuthSession.LOGIN_USER, sessionUser))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        assertThat(tagsHtml)
+                .contains("Admin Tag Case")
+                .doesNotContain("保存");
+
         mockMvc.perform(post("/admin/articles")
                         .sessionAttr(AuthSession.LOGIN_USER, sessionUser)
                         .param("title", "Admin Managed Article")

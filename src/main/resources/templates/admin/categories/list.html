@@ -29,10 +29,7 @@
     </form>
     <section class="table-list">
         <article class="row-item" th:each="category : ${categories}">
-            <form class="inline-form" th:action="@{/admin/categories/{id}(id=${category.id})}" method="post">
-                <input type="text" name="name" th:value="${category.name}" required>
-                <button class="secondary" type="submit">保存</button>
-            </form>
+            <span class="taxonomy-name" th:text="${category.name}">分类名称</span>
             <form th:action="@{/admin/categories/{id}/delete(id=${category.id})}" method="post">
                 <button class="danger" type="submit">删除</button>
             </form>

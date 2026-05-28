@@ -356,6 +356,11 @@ button,
     flex: 1;
 }
 
+.taxonomy-name {
+    flex: 1;
+    font-weight: 700;
+}
+
 @media (max-width: 720px) {
     .site-header,
     .admin-item,

@@ -163,12 +163,6 @@ public class AdminController {
         return "redirect:/admin/categories";
     }
 
-    @PostMapping("/admin/categories/{id}")
-    public String updateCategory(@PathVariable Long id, @RequestParam String name) {
-        categoryService.update(id, name);
-        return "redirect:/admin/categories";
-    }
-
     @PostMapping("/admin/categories/{id}/delete")
     public String deleteCategory(@PathVariable Long id, RedirectAttributes redirectAttributes) {
         try {
@@ -188,12 +182,6 @@ public class AdminController {
     @PostMapping("/admin/tags")
     public String createTag(@RequestParam String name) {
         tagService.create(name);
-        return "redirect:/admin/tags";
-    }
-
-    @PostMapping("/admin/tags/{id}")
-    public String updateTag(@PathVariable Long id, @RequestParam String name) {
-        tagService.update(id, name);
         return "redirect:/admin/tags";
     }
 

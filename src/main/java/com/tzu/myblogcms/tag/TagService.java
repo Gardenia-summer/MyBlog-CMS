@@ -43,11 +43,6 @@ public class TagService {
     }
 
     @Transactional
-    public void update(Long id, String name) {
-        requireTag(id).rename(clean(name));
-    }
-
-    @Transactional
     public void delete(Long id) {
         if (articleRepository.countByTags_Id(id) > 0) {
             throw new IllegalArgumentException("已有文章使用该标签，无法删除");

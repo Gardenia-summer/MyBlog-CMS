@@ -33,11 +33,6 @@ public class CategoryService {
     }
 
     @Transactional
-    public void update(Long id, String name) {
-        requireCategory(id).rename(clean(name));
-    }
-
-    @Transactional
     public void delete(Long id) {
         if (articleRepository.countByCategory_Id(id) > 0) {
             throw new IllegalArgumentException("已有文章使用该分类，无法删除");

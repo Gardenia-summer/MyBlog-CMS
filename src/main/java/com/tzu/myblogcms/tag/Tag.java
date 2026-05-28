@@ -33,7 +33,4 @@ public class Tag {
         return name;
     }
 
-    public void rename(String name) {
-        this.name = name;
-    }
 }
