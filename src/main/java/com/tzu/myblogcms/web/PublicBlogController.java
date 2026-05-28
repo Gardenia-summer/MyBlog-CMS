@@ -2,7 +2,9 @@ package com.tzu.myblogcms.web;
 
 import com.tzu.myblogcms.article.ArticleService;
 import com.tzu.myblogcms.auth.AuthSession;
+import com.tzu.myblogcms.auth.Role;
 import com.tzu.myblogcms.auth.SessionUser;
+import com.tzu.myblogcms.auth.UserRepository;
 import com.tzu.myblogcms.category.CategoryService;
 import com.tzu.myblogcms.comment.CommentService;
 import com.tzu.myblogcms.tag.TagService;
@@ -27,15 +29,18 @@ public class PublicBlogController {
     private final CategoryService categoryService;
     private final TagService tagService;
     private final CommentService commentService;
+    private final UserRepository userRepository;
 
     public PublicBlogController(ArticleService articleService,
                                 CategoryService categoryService,
                                 TagService tagService,
-                                CommentService commentService) {
+                                CommentService commentService,
+                                UserRepository userRepository) {
         this.articleService = articleService;
         this.categoryService = categoryService;
         this.tagService = tagService;
         this.commentService = commentService;
+        this.userRepository = userRepository;
     }
 
     @GetMapping("/")
@@ -69,6 +74,23 @@ public class PublicBlogController {
         model.addAttribute("comments", commentService.listByArticle(article));
         model.addAttribute("currentUser", AuthSession.currentUser(request.getSession(false)).orElse(null));
         return "articles/detail";
+    }
+
+    @GetMapping("/users/{id}")
+    public String userProfile(@PathVariable Long id,
+                              @RequestParam(defaultValue = "0") int page,
+                              HttpServletRequest request,
+                              Model model) {
+        var profileUser = userRepository.findById(id)
+                .filter(user -> user.getRole() == Role.USER)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        model.addAttribute("profileUser", profileUser);
+        model.addAttribute("articlePage", articleService.listByAuthor(
+                profileUser.getId(),
+                PageRequest.of(Math.max(page, 0), 5, Sort.by(Sort.Direction.DESC, "createdAt"))
+        ));
+        model.addAttribute("currentUser", AuthSession.currentUser(request.getSession(false)).orElse(null));
+        return "users/profile";
     }
 
     @PostMapping("/articles/{id}/comments")

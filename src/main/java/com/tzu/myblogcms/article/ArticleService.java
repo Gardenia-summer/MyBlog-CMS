@@ -65,6 +65,11 @@ public class ArticleService {
 
     @Transactional(readOnly = true)
     public Page<Article> listMine(Long authorId, Pageable pageable) {
+        return listByAuthor(authorId, pageable);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<Article> listByAuthor(Long authorId, Pageable pageable) {
         User author = userRepository.findById(authorId).orElseThrow();
         return articleRepository.findByAuthorOrderByCreatedAtDesc(author, pageable);
     }

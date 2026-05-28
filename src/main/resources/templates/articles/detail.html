@@ -28,7 +28,8 @@
     <article class="article-detail">
         <h1 th:text="${article.title}">文章标题</h1>
         <div class="meta">
-            <span th:text="${article.author.nickname}">作者</span>
+            <a th:if="${article.author.role.name() == 'USER'}" th:href="@{/users/{id}(id=${article.author.id})}" th:text="${article.author.nickname}">作者</a>
+            <span th:if="${article.author.role.name() != 'USER'}" th:text="${article.author.nickname}">作者</span>
             <span th:text="${article.category.name}">分类</span>
             <time th:text="${#temporals.format(article.createdAt, 'yyyy-MM-dd HH:mm')}">时间</time>
         </div>
@@ -49,13 +50,14 @@
 
         <article class="comment-item" th:each="comment : ${comments}">
             <div class="comment-row">
-                <div th:if="${comment.author.role.name() == 'USER'}">
+                <a th:if="${comment.author.role.name() == 'USER'}" th:href="@{/users/{id}(id=${comment.author.id})}" aria-label="查看用户主页">
                     <img th:if="${!#strings.isEmpty(comment.author.avatarUrl)}" class="avatar avatar-small" th:src="@{${comment.author.avatarUrl}}" alt="">
                     <span th:if="${#strings.isEmpty(comment.author.avatarUrl)}" class="avatar avatar-small avatar-placeholder" th:text="${#strings.substring(comment.author.nickname, 0, 1)}">U</span>
-                </div>
+                </a>
                 <div class="comment-body">
                     <div class="meta">
-                        <span th:text="${comment.author.nickname}">用户</span>
+                        <a th:if="${comment.author.role.name() == 'USER'}" th:href="@{/users/{id}(id=${comment.author.id})}" th:text="${comment.author.nickname}">用户</a>
+                        <span th:if="${comment.author.role.name() != 'USER'}" th:text="${comment.author.nickname}">用户</span>
                         <time th:text="${#temporals.format(comment.createdAt, 'yyyy-MM-dd HH:mm')}">时间</time>
                     </div>
                     <p th:text="${comment.content}">评论内容</p>

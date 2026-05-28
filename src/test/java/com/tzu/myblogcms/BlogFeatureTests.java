@@ -294,6 +294,7 @@ class BlogFeatureTests {
                 .getContentAsString();
         assertThat(homeHtml)
                 .contains("Visible Author Nickname")
+                .contains("href=\"/users/" + author.getId() + "\"")
                 .doesNotContain("hidden_author_username_case");
 
         String detailHtml = mockMvc.perform(get("/articles/" + article.getId()))
@@ -304,8 +305,68 @@ class BlogFeatureTests {
         assertThat(detailHtml)
                 .contains("Visible Author Nickname")
                 .contains("Visible Comment Nickname")
+                .contains("href=\"/users/" + author.getId() + "\"")
+                .contains("href=\"/users/" + commenter.getId() + "\"")
                 .doesNotContain("hidden_author_username_case")
                 .doesNotContain("hidden_comment_username_case");
+    }
+
+    @Test
+    void publicUserProfileShowsReadOnlyProfileAndArticlesWithoutSession() throws Exception {
+        User profileUser = new User("public_profile_username_case", passwordEncoder.encode("admin123"), Role.USER);
+        profileUser.updateNickname("Public Profile Nickname");
+        profileUser.setAvatarUrl("/uploads/avatars/public-profile.png");
+        profileUser.updateBio("Public profile bio");
+        profileUser = userRepository.save(profileUser);
+        User otherUser = userRepository.save(new User("other_public_profile_case", passwordEncoder.encode("admin123"), Role.USER));
+        Category category = categoryRepository.save(new Category("Public Profile Category Case"));
+        Tag tag = tagRepository.save(new Tag("Public Profile Tag Case"));
+        articleService.createArticle(form("Public Profile Article", "Profile content", category, List.of(tag)), profileUser.getId());
+        articleService.createArticle(form("Other Profile Article", "Other content", category, List.of()), otherUser.getId());
+
+        var result = mockMvc.perform(get("/users/" + profileUser.getId()))
+                .andExpect(status().isOk())
+                .andReturn();
+        String html = result.getResponse().getContentAsString();
+
+        assertThat(result.getRequest().getSession(false)).isNull();
+        assertThat(html)
+                .contains("Public Profile Nickname")
+                .contains("/uploads/avatars/public-profile.png")
+                .contains("Public profile bio")
+                .contains("Public Profile Article")
+                .contains("Public Profile Category Case")
+                .contains("Public Profile Tag Case")
+                .doesNotContain("public_profile_username_case")
+                .doesNotContain("Other Profile Article")
+                .doesNotContain("保存简介")
+                .doesNotContain("保存昵称")
+                .doesNotContain("编辑")
+                .doesNotContain("删除")
+                .doesNotContain(";jsessionid");
+    }
+
+    @Test
+    void adminUserProfilesAreNotPublicAndAdminListLinksOnlyRegularUsers() throws Exception {
+        User admin = userRepository.save(new User("admin_public_profile_case", passwordEncoder.encode("admin123"), Role.ADMIN));
+        User regularUser = new User("regular_public_profile_case", passwordEncoder.encode("admin123"), Role.USER);
+        regularUser.updateNickname("Regular Profile Link");
+        regularUser = userRepository.save(regularUser);
+
+        mockMvc.perform(get("/users/" + admin.getId()))
+                .andExpect(status().isNotFound());
+
+        String html = mockMvc.perform(get("/admin/users")
+                        .sessionAttr(AuthSession.LOGIN_USER, new SessionUser(admin.getId(), admin.getUsername(), Role.ADMIN)))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        assertThat(html)
+                .contains("href=\"/users/" + regularUser.getId() + "\"")
+                .contains("Regular Profile Link")
+                .doesNotContain("href=\"/users/" + admin.getId() + "\"");
     }
 
     @Test
