@@ -170,8 +170,12 @@ public class AdminController {
     }
 
     @PostMapping("/admin/categories/{id}/delete")
-    public String deleteCategory(@PathVariable Long id) {
-        categoryService.delete(id);
+    public String deleteCategory(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+        try {
+            categoryService.delete(id);
+        } catch (IllegalArgumentException ex) {
+            redirectAttributes.addFlashAttribute("error", ex.getMessage());
+        }
         return "redirect:/admin/categories";
     }
 
@@ -194,8 +198,12 @@ public class AdminController {
     }
 
     @PostMapping("/admin/tags/{id}/delete")
-    public String deleteTag(@PathVariable Long id) {
-        tagService.delete(id);
+    public String deleteTag(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+        try {
+            tagService.delete(id);
+        } catch (IllegalArgumentException ex) {
+            redirectAttributes.addFlashAttribute("error", ex.getMessage());
+        }
         return "redirect:/admin/tags";
     }
 

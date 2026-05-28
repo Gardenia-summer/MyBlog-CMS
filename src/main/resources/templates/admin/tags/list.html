@@ -19,6 +19,10 @@
         </nav>
     </header>
     <h1>标签管理</h1>
+    <p class="error" th:if="${error}" th:text="${error}">无法删除</p>
+    <script th:if="${error}" th:inline="javascript">
+        alert([[${error}]]);
+    </script>
     <form class="inline-form" th:action="@{/admin/tags}" method="post">
         <input type="text" name="name" placeholder="新标签名称" required>
         <button type="submit">新增标签</button>

@@ -39,6 +39,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.flash;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -579,6 +580,40 @@ class BlogFeatureTests {
                 .andExpect(redirectedUrl("/admin/articles"));
 
         assertThat(articleRepository.findById(article.getId())).isEmpty();
+    }
+
+    @Test
+    void adminCannotDeleteTaxonomyUsedByArticles() throws Exception {
+        User admin = userRepository.save(new User("admin_taxonomy_used_case", passwordEncoder.encode("admin123"), Role.ADMIN));
+        SessionUser sessionUser = new SessionUser(admin.getId(), admin.getUsername(), Role.ADMIN);
+        User author = userRepository.save(new User("taxonomy_used_author_case", passwordEncoder.encode("admin123"), Role.USER));
+        Category category = categoryRepository.save(new Category("Used Category Case"));
+        Tag tag = tagRepository.save(new Tag("Used Tag Case"));
+        Article article = articleService.createArticle(form("Used Taxonomy Article", "Content", category, List.of(tag)), author.getId());
+
+        String categoryError = "已有文章使用该分类，无法删除";
+        mockMvc.perform(post("/admin/categories/" + category.getId() + "/delete")
+                        .sessionAttr(AuthSession.LOGIN_USER, sessionUser))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/admin/categories"))
+                .andExpect(flash().attribute("error", categoryError));
+        assertThat(categoryRepository.findById(category.getId())).isPresent();
+
+        mockMvc.perform(get("/admin/categories")
+                        .sessionAttr(AuthSession.LOGIN_USER, sessionUser)
+                        .flashAttr("error", categoryError))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("alert(")))
+                .andExpect(content().string(containsString(categoryError)));
+
+        String tagError = "已有文章使用该标签，无法删除";
+        mockMvc.perform(post("/admin/tags/" + tag.getId() + "/delete")
+                        .sessionAttr(AuthSession.LOGIN_USER, sessionUser))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/admin/tags"))
+                .andExpect(flash().attribute("error", tagError));
+        assertThat(tagRepository.findById(tag.getId())).isPresent();
+        assertThat(articleRepository.findById(article.getId())).isPresent();
     }
 
     @Test

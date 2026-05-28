@@ -1,5 +1,6 @@
 package com.tzu.myblogcms.category;
 
+import com.tzu.myblogcms.article.ArticleRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -9,9 +10,11 @@ import java.util.List;
 public class CategoryService {
 
     private final CategoryRepository categoryRepository;
+    private final ArticleRepository articleRepository;
 
-    public CategoryService(CategoryRepository categoryRepository) {
+    public CategoryService(CategoryRepository categoryRepository, ArticleRepository articleRepository) {
         this.categoryRepository = categoryRepository;
+        this.articleRepository = articleRepository;
     }
 
     @Transactional(readOnly = true)
@@ -36,6 +39,9 @@ public class CategoryService {
 
     @Transactional
     public void delete(Long id) {
+        if (articleRepository.countByCategory_Id(id) > 0) {
+            throw new IllegalArgumentException("已有文章使用该分类，无法删除");
+        }
         categoryRepository.deleteById(id);
     }
 

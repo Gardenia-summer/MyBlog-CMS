@@ -1,5 +1,6 @@
 package com.tzu.myblogcms.tag;
 
+import com.tzu.myblogcms.article.ArticleRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -11,9 +12,11 @@ import java.util.Set;
 public class TagService {
 
     private final TagRepository tagRepository;
+    private final ArticleRepository articleRepository;
 
-    public TagService(TagRepository tagRepository) {
+    public TagService(TagRepository tagRepository, ArticleRepository articleRepository) {
         this.tagRepository = tagRepository;
+        this.articleRepository = articleRepository;
     }
 
     @Transactional(readOnly = true)
@@ -46,6 +49,9 @@ public class TagService {
 
     @Transactional
     public void delete(Long id) {
+        if (articleRepository.countByTags_Id(id) > 0) {
+            throw new IllegalArgumentException("已有文章使用该标签，无法删除");
+        }
         tagRepository.deleteById(id);
     }
 

@@ -22,4 +22,8 @@ public interface ArticleRepository extends JpaRepository<Article, Long> {
     Page<Article> findByAuthorOrderByCreatedAtDesc(User author, Pageable pageable);
 
     List<Article> findByAuthor(User author);
+
+    long countByCategory_Id(Long categoryId);
+
+    long countByTags_Id(Long tagId);
 }
