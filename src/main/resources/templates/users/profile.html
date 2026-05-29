@@ -43,13 +43,18 @@
     <h2 th:text="${profileUser.nickname} + '的文章'">用户的文章</h2>
     <section class="article-list" th:if="${!articlePage.empty}">
         <article class="article-item" th:each="article : ${articlePage.content}">
-            <a class="article-title" th:href="@{/articles/{id}(id=${article.id})}" th:text="${article.title}">文章标题</a>
-            <div class="meta">
-                <span th:text="${article.category.name}">分类</span>
-                <time th:text="${#temporals.format(article.createdAt, 'yyyy-MM-dd HH:mm')}">时间</time>
-            </div>
-            <div class="tag-row">
-                <a th:each="tag : ${article.tags}" th:href="@{/(tagId=${tag.id})}" th:text="${tag.name}">标签</a>
+            <div class="article-list-row">
+                <div class="article-list-main">
+                    <a class="article-title" th:href="@{/articles/{id}(id=${article.id})}" th:text="${article.title}">文章标题</a>
+                    <div class="meta">
+                        <span th:text="${article.category.name}">分类</span>
+                        <time th:text="${#temporals.format(article.createdAt, 'yyyy-MM-dd HH:mm')}">时间</time>
+                    </div>
+                    <div class="tag-row">
+                        <a th:each="tag : ${article.tags}" th:href="@{/(tagId=${tag.id})}" th:text="${tag.name}">标签</a>
+                    </div>
+                </div>
+                <span class="like-count"><span aria-hidden="true">&#128077;</span><span th:text="${article.likeCount}">0</span></span>
             </div>
         </article>
     </section>

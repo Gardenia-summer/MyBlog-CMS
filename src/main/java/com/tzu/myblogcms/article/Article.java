@@ -59,6 +59,12 @@ public class Article {
     @OneToMany(mappedBy = "article", cascade = CascadeType.REMOVE)
     private Set<Comment> comments = new LinkedHashSet<>();
 
+    @OneToMany(mappedBy = "article", cascade = CascadeType.REMOVE)
+    private Set<ArticleLike> likes = new LinkedHashSet<>();
+
+    @Column(nullable = false)
+    private int likeCount;
+
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -123,6 +129,20 @@ public class Article {
 
     public LocalDateTime getUpdatedAt() {
         return updatedAt;
+    }
+
+    public int getLikeCount() {
+        return likeCount;
+    }
+
+    public void incrementLikeCount() {
+        this.likeCount++;
+    }
+
+    public void decrementLikeCount() {
+        if (this.likeCount > 0) {
+            this.likeCount--;
+        }
     }
 
     public void update(String title, String content, Category category, Set<Tag> tags) {

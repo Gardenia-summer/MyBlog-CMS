@@ -1,6 +1,7 @@
 package com.tzu.myblogcms.web;
 
 import com.tzu.myblogcms.article.ArticleService;
+import com.tzu.myblogcms.article.ArticleLikeService;
 import com.tzu.myblogcms.auth.AuthSession;
 import com.tzu.myblogcms.auth.Role;
 import com.tzu.myblogcms.auth.SessionUser;
@@ -30,17 +31,20 @@ public class PublicBlogController {
     private final TagService tagService;
     private final CommentService commentService;
     private final UserRepository userRepository;
+    private final ArticleLikeService articleLikeService;
 
     public PublicBlogController(ArticleService articleService,
                                 CategoryService categoryService,
                                 TagService tagService,
                                 CommentService commentService,
-                                UserRepository userRepository) {
+                                UserRepository userRepository,
+                                ArticleLikeService articleLikeService) {
         this.articleService = articleService;
         this.categoryService = categoryService;
         this.tagService = tagService;
         this.commentService = commentService;
         this.userRepository = userRepository;
+        this.articleLikeService = articleLikeService;
     }
 
     @GetMapping("/")
@@ -70,9 +74,13 @@ public class PublicBlogController {
     public String detail(@PathVariable Long id, HttpServletRequest request, Model model) {
         var article = articleService.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        SessionUser currentUser = AuthSession.currentUser(request.getSession(false)).orElse(null);
         model.addAttribute("article", article);
         model.addAttribute("comments", commentService.listByArticle(article));
-        model.addAttribute("currentUser", AuthSession.currentUser(request.getSession(false)).orElse(null));
+        model.addAttribute("currentUser", currentUser);
+        model.addAttribute("likedByCurrentUser", currentUser != null
+                && currentUser.role() == Role.USER
+                && articleLikeService.isLikedBy(article.getId(), currentUser.id()));
         return "articles/detail";
     }
 
@@ -104,6 +112,13 @@ public class PublicBlogController {
         } catch (IllegalArgumentException ex) {
             redirectAttributes.addFlashAttribute("error", ex.getMessage());
         }
+        return "redirect:/articles/" + id;
+    }
+
+    @PostMapping("/articles/{id}/like")
+    public String like(@PathVariable Long id, HttpSession session) {
+        SessionUser user = AuthSession.currentUser(session).orElseThrow();
+        articleLikeService.toggleLike(id, user.id());
         return "redirect:/articles/" + id;
     }
 }

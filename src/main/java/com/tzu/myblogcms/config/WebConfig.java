@@ -29,7 +29,7 @@ public class WebConfig implements WebMvcConfigurer {
                 .addPathPatterns("/admin/**")
                 .excludePathPatterns("/admin/login");
         registry.addInterceptor(userLoginInterceptor)
-                .addPathPatterns("/me/**", "/articles/*/comments");
+                .addPathPatterns("/me/**", "/articles/*/comments", "/articles/*/like");
     }
 
     @Override

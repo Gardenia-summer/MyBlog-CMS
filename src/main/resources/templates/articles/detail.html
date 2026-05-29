@@ -37,6 +37,20 @@
             <a th:each="tag : ${article.tags}" th:href="@{/(tagId=${tag.id})}" th:text="${tag.name}">标签</a>
         </div>
         <div class="content" th:text="${article.content}">正文</div>
+        <div class="article-like-panel">
+            <form th:if="${currentUser != null and currentUser.role.name() == 'USER'}" th:action="@{/articles/{id}/like(id=${article.id})}" method="post">
+                <button class="like-button" th:classappend="${likedByCurrentUser} ? ' liked'" type="submit" th:attr="aria-pressed=${likedByCurrentUser},aria-label=${likedByCurrentUser} ? '取消点赞' : '点赞'">
+                    <span aria-hidden="true">&#128077;</span>
+                    <span th:text="${article.likeCount}">0</span>
+                </button>
+            </form>
+            <a class="like-login" th:if="${currentUser == null}" th:href="@{/login}">
+                <span aria-hidden="true">&#128077;</span>
+                <span th:text="${article.likeCount}">0</span>
+                <span>登录后点赞</span>
+            </a>
+            <span class="like-count like-detail" th:if="${currentUser != null and currentUser.role.name() == 'ADMIN'}"><span aria-hidden="true">&#128077;</span><span th:text="${article.likeCount}">0</span></span>
+        </div>
     </article>
 
     <section class="comments">

@@ -19,7 +19,13 @@ public interface ArticleRepository extends JpaRepository<Article, Long> {
     List<Article> findAllByOrderByCreatedAtDesc();
 
     @EntityGraph(attributePaths = {"author", "category", "tags"})
+    List<Article> findAllByOrderByLikeCountDescCreatedAtAsc();
+
+    @EntityGraph(attributePaths = {"author", "category", "tags"})
     Page<Article> findByAuthorOrderByCreatedAtDesc(User author, Pageable pageable);
+
+    @EntityGraph(attributePaths = {"author", "category", "tags"})
+    Page<Article> findByAuthorOrderByLikeCountDescCreatedAtAsc(User author, Pageable pageable);
 
     List<Article> findByAuthor(User author);
 

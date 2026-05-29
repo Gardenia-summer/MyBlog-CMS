@@ -1,5 +1,6 @@
 DROP TABLE IF EXISTS article_tags;
 DROP TABLE IF EXISTS comments;
+DROP TABLE IF EXISTS article_likes;
 DROP TABLE IF EXISTS articles;
 DROP TABLE IF EXISTS tags;
 DROP TABLE IF EXISTS categories;
@@ -34,8 +35,19 @@ CREATE TABLE articles (
     category_id BIGINT NOT NULL,
     created_at DATETIME NOT NULL,
     updated_at DATETIME NOT NULL,
+    like_count INT NOT NULL DEFAULT 0,
     CONSTRAINT fk_articles_author FOREIGN KEY (author_id) REFERENCES users(id),
     CONSTRAINT fk_articles_category FOREIGN KEY (category_id) REFERENCES categories(id)
+);
+
+CREATE TABLE article_likes (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    article_id BIGINT NOT NULL,
+    user_id BIGINT NOT NULL,
+    created_at DATETIME NOT NULL,
+    CONSTRAINT uk_article_likes_article_user UNIQUE (article_id, user_id),
+    CONSTRAINT fk_article_likes_article FOREIGN KEY (article_id) REFERENCES articles(id) ON DELETE CASCADE,
+    CONSTRAINT fk_article_likes_user FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
 CREATE TABLE article_tags (

@@ -53,7 +53,7 @@ public class ArticleService {
     @Transactional(readOnly = true)
     public Page<Article> searchArticles(String keyword, Long categoryId, Long tagId, Pageable pageable) {
         String cleanKeyword = keyword == null || keyword.trim().isEmpty() ? null : keyword.trim();
-        List<Article> filtered = articleRepository.findAllByOrderByCreatedAtDesc().stream()
+        List<Article> filtered = articleRepository.findAllByOrderByLikeCountDescCreatedAtAsc().stream()
                 .filter(article -> categoryId == null || article.getCategory().getId().equals(categoryId))
                 .filter(article -> tagId == null || article.getTags().stream().anyMatch(tag -> tag.getId().equals(tagId)))
                 .filter(article -> cleanKeyword == null || matchesKeyword(article, cleanKeyword))
@@ -65,13 +65,14 @@ public class ArticleService {
 
     @Transactional(readOnly = true)
     public Page<Article> listMine(Long authorId, Pageable pageable) {
-        return listByAuthor(authorId, pageable);
+        User author = userRepository.findById(authorId).orElseThrow();
+        return articleRepository.findByAuthorOrderByCreatedAtDesc(author, pageable);
     }
 
     @Transactional(readOnly = true)
     public Page<Article> listByAuthor(Long authorId, Pageable pageable) {
         User author = userRepository.findById(authorId).orElseThrow();
-        return articleRepository.findByAuthorOrderByCreatedAtDesc(author, pageable);
+        return articleRepository.findByAuthorOrderByLikeCountDescCreatedAtAsc(author, pageable);
     }
 
     @Transactional

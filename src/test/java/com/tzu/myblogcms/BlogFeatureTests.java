@@ -2,6 +2,8 @@ package com.tzu.myblogcms;
 
 import com.tzu.myblogcms.article.Article;
 import com.tzu.myblogcms.article.ArticleForm;
+import com.tzu.myblogcms.article.ArticleLikeRepository;
+import com.tzu.myblogcms.article.ArticleLikeService;
 import com.tzu.myblogcms.article.ArticleRepository;
 import com.tzu.myblogcms.article.ArticleService;
 import com.tzu.myblogcms.auth.AuthService;
@@ -10,6 +12,7 @@ import com.tzu.myblogcms.auth.AvatarService;
 import com.tzu.myblogcms.auth.Role;
 import com.tzu.myblogcms.auth.SessionUser;
 import com.tzu.myblogcms.auth.User;
+import com.tzu.myblogcms.auth.UserAdminService;
 import com.tzu.myblogcms.auth.UserProfileService;
 import com.tzu.myblogcms.auth.UserRepository;
 import com.tzu.myblogcms.category.Category;
@@ -54,6 +57,12 @@ class BlogFeatureTests {
     private ArticleRepository articleRepository;
 
     @Autowired
+    private ArticleLikeRepository articleLikeRepository;
+
+    @Autowired
+    private ArticleLikeService articleLikeService;
+
+    @Autowired
     private UserRepository userRepository;
 
     @Autowired
@@ -73,6 +82,9 @@ class BlogFeatureTests {
 
     @Autowired
     private UserProfileService userProfileService;
+
+    @Autowired
+    private UserAdminService userAdminService;
 
     @Autowired
     private BCryptPasswordEncoder passwordEncoder;
@@ -177,6 +189,134 @@ class BlogFeatureTests {
         mockMvc.perform(get("/articles/" + article.getId()))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("Nice article")));
+    }
+
+    @Test
+    void userCanLikeAndUnlikeArticle() throws Exception {
+        User author = userRepository.save(new User("like_author_case", passwordEncoder.encode("admin123"), Role.USER));
+        User liker = userRepository.save(new User("like_user_case", passwordEncoder.encode("admin123"), Role.USER));
+        Category category = categoryRepository.save(new Category("Like Category Case"));
+        Article article = articleService.createArticle(form("Like Toggle Article", "Like body", category, List.of()), author.getId());
+        MockHttpSession session = new MockHttpSession();
+        session.setAttribute(AuthSession.LOGIN_USER, new SessionUser(liker.getId(), liker.getUsername(), Role.USER));
+
+        mockMvc.perform(post("/articles/" + article.getId() + "/like").session(session))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/articles/" + article.getId()));
+
+        assertThat(articleLikeRepository.countByArticle_Id(article.getId())).isEqualTo(1);
+        assertThat(articleLikeRepository.countByUser_Id(liker.getId())).isEqualTo(1);
+        assertThat(articleRepository.findById(article.getId()).orElseThrow().getLikeCount()).isEqualTo(1);
+
+        String likedHtml = mockMvc.perform(get("/articles/" + article.getId()).session(session))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        assertThat(likedHtml)
+                .contains("aria-pressed=\"true\"")
+                .contains("&#128077;")
+                .contains(">1</span>");
+
+        mockMvc.perform(post("/articles/" + article.getId() + "/like").session(session))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/articles/" + article.getId()));
+
+        assertThat(articleLikeRepository.countByArticle_Id(article.getId())).isZero();
+        assertThat(articleRepository.findById(article.getId()).orElseThrow().getLikeCount()).isZero();
+    }
+
+    @Test
+    void anonymousAndAdminUsersCannotLikeArticles() throws Exception {
+        User author = userRepository.save(new User("like_access_author_case", passwordEncoder.encode("admin123"), Role.USER));
+        User admin = userRepository.save(new User("like_access_admin_case", passwordEncoder.encode("admin123"), Role.ADMIN));
+        Category category = categoryRepository.save(new Category("Like Access Category Case"));
+        Article article = articleService.createArticle(form("Like Access Article", "Like access body", category, List.of()), author.getId());
+
+        mockMvc.perform(post("/articles/" + article.getId() + "/like"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/login"));
+
+        mockMvc.perform(post("/articles/" + article.getId() + "/like")
+                        .sessionAttr(AuthSession.LOGIN_USER, new SessionUser(admin.getId(), admin.getUsername(), Role.ADMIN)))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/admin/articles"));
+
+        String adminDetailHtml = mockMvc.perform(get("/articles/" + article.getId())
+                        .sessionAttr(AuthSession.LOGIN_USER, new SessionUser(admin.getId(), admin.getUsername(), Role.ADMIN)))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        assertThat(articleRepository.findById(article.getId()).orElseThrow().getLikeCount()).isZero();
+        assertThat(adminDetailHtml)
+                .contains("like-detail")
+                .contains("&#128077;")
+                .doesNotContain("action=\"/articles/" + article.getId() + "/like\"");
+    }
+
+    @Test
+    void publicListsShowLikeCountsAndSortByLikesThenOldestCreationTime() throws Exception {
+        User author = userRepository.save(new User("like_sort_author_case", passwordEncoder.encode("admin123"), Role.USER));
+        User likerOne = userRepository.save(new User("like_sort_user_one_case", passwordEncoder.encode("admin123"), Role.USER));
+        User likerTwo = userRepository.save(new User("like_sort_user_two_case", passwordEncoder.encode("admin123"), Role.USER));
+        Category category = categoryRepository.save(new Category("Like Sort Category Case"));
+        Tag tag = tagRepository.save(new Tag("Like Sort Tag Case"));
+        Article early = articleService.createArticle(form("Early One Like Article", "Early body", category, List.of(tag)), author.getId());
+        Thread.sleep(5);
+        Article later = articleService.createArticle(form("Later One Like Article", "Later body", category, List.of(tag)), author.getId());
+        Thread.sleep(5);
+        Article popular = articleService.createArticle(form("Popular Two Likes Article", "Popular body", category, List.of(tag)), author.getId());
+
+        articleLikeService.toggleLike(early.getId(), likerOne.getId());
+        articleLikeService.toggleLike(later.getId(), likerOne.getId());
+        articleLikeService.toggleLike(popular.getId(), likerOne.getId());
+        articleLikeService.toggleLike(popular.getId(), likerTwo.getId());
+
+        String homeHtml = mockMvc.perform(get("/"))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        assertThat(homeHtml)
+                .contains("&#128077;")
+                .contains(">2</span>")
+                .contains(">1</span>");
+        assertThat(homeHtml.indexOf("Popular Two Likes Article")).isLessThan(homeHtml.indexOf("Early One Like Article"));
+        assertThat(homeHtml.indexOf("Early One Like Article")).isLessThan(homeHtml.indexOf("Later One Like Article"));
+
+        String profileHtml = mockMvc.perform(get("/users/" + author.getId()))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        assertThat(profileHtml.indexOf("Popular Two Likes Article")).isLessThan(profileHtml.indexOf("Early One Like Article"));
+        assertThat(profileHtml.indexOf("Early One Like Article")).isLessThan(profileHtml.indexOf("Later One Like Article"));
+    }
+
+    @Test
+    void deletingUsersOrArticlesCleansUpLikes() {
+        User author = userRepository.save(new User("like_cleanup_author_case", passwordEncoder.encode("admin123"), Role.USER));
+        User liker = userRepository.save(new User("like_cleanup_user_case", passwordEncoder.encode("admin123"), Role.USER));
+        Category category = categoryRepository.save(new Category("Like Cleanup Category Case"));
+        Article article = articleService.createArticle(form("Like Cleanup Article", "Cleanup body", category, List.of()), author.getId());
+        articleLikeService.toggleLike(article.getId(), liker.getId());
+
+        userAdminService.deleteUser(liker.getId());
+
+        assertThat(articleLikeRepository.countByUser_Id(liker.getId())).isZero();
+        assertThat(articleLikeRepository.countByArticle_Id(article.getId())).isZero();
+        assertThat(articleRepository.findById(article.getId()).orElseThrow().getLikeCount()).isZero();
+
+        User secondLiker = userRepository.save(new User("like_article_cleanup_user_case", passwordEncoder.encode("admin123"), Role.USER));
+        articleLikeService.toggleLike(article.getId(), secondLiker.getId());
+        assertThat(articleLikeRepository.countByArticle_Id(article.getId())).isEqualTo(1);
+
+        articleService.deleteArticle(article.getId());
+
+        assertThat(articleRepository.findById(article.getId())).isEmpty();
+        assertThat(articleLikeRepository.countByArticle_Id(article.getId())).isZero();
     }
 
     @Test
@@ -288,7 +428,7 @@ class BlogFeatureTests {
         );
         commentRepository.save(new com.tzu.myblogcms.comment.Comment(article, commenter, "Nickname comment"));
 
-        String homeHtml = mockMvc.perform(get("/"))
+        String homeHtml = mockMvc.perform(get("/").param("keyword", "Nickname Display Article"))
                 .andExpect(status().isOk())
                 .andReturn()
                 .getResponse()

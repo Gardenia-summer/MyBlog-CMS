@@ -107,6 +107,17 @@ h2 {
     font-weight: 700;
 }
 
+.article-list-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.article-list-main {
+    min-width: 0;
+}
+
 .meta {
     display: flex;
     flex-wrap: wrap;
@@ -186,6 +197,46 @@ h2 {
 
 .article-detail {
     padding: 22px 0;
+}
+
+.article-like-panel {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 24px;
+}
+
+.like-button,
+.like-login,
+.like-count {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 36px;
+    padding: 7px 12px;
+    border: 1px solid #cfd6dd;
+    border-radius: 999px;
+    color: #3b4046;
+    background: #ffffff;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.like-button {
+    cursor: pointer;
+}
+
+.like-button.liked {
+    border-color: #1769aa;
+    color: #1769aa;
+    background: #e8f2fb;
+}
+
+.like-login:hover {
+    text-decoration: none;
+}
+
+.like-detail {
+    color: #69707a;
 }
 
 .content {
@@ -365,6 +416,7 @@ button,
     .site-header,
     .admin-item,
     .row-item,
+    .article-list-row,
     .search-form,
     .actions {
         align-items: stretch;
