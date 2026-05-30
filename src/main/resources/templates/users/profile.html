@@ -23,7 +23,7 @@
             <a th:if="${currentUser != null and currentUser.role.name() == 'USER'}" th:href="@{/me/articles}">我的</a>
             <a th:if="${currentUser == null}" th:href="@{/login}">登录</a>
             <a th:if="${currentUser == null}" th:href="@{/register}">注册</a>
-            <form th:if="${currentUser != null}" th:action="${currentUser.role.name() == 'ADMIN'} ? @{/admin/logout} : @{/logout}" method="post">
+            <form th:if="${currentUser != null and currentUser.role.name() == 'USER'}" th:action="@{/logout}" method="post">
                 <button class="link-action" type="submit">退出</button>
             </form>
         </nav>

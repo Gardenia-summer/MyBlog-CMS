@@ -10,7 +10,10 @@
 <main class="page">
     <header class="site-header">
         <a class="brand" th:href="@{/admin/articles}">后台管理</a>
-        <nav class="nav"><a th:href="@{/admin/articles}">返回文章管理</a></nav>
+        <nav class="nav admin-nav">
+            <a th:href="@{/admin/articles}">返回文章管理</a>
+            <form th:action="@{/admin/logout}" method="post"><button class="link-action" type="submit">退出</button></form>
+        </nav>
     </header>
     <form class="editor-form" th:action="@{/admin/articles}" th:object="${articleForm}" method="post">
         <h1>发布文章</h1>

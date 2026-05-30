@@ -508,6 +508,18 @@ class BlogFeatureTests {
                 .contains("href=\"/users/" + regularUser.getId() + "\"")
                 .contains("Regular Profile Link")
                 .doesNotContain("href=\"/users/" + admin.getId() + "\"");
+
+        String profileHtml = mockMvc.perform(get("/users/" + regularUser.getId())
+                        .sessionAttr(AuthSession.LOGIN_USER, new SessionUser(admin.getId(), admin.getUsername(), Role.ADMIN)))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        assertThat(profileHtml)
+                .contains("href=\"/admin/articles\"")
+                .contains("后台")
+                .doesNotContain("action=\"/admin/logout\"")
+                .doesNotContain("退出");
     }
 
     @Test
@@ -672,6 +684,25 @@ class BlogFeatureTests {
                 .contains("href=\"/admin/articles\"")
                 .doesNotContain("href=\"/me/articles\"")
                 .doesNotContain("action=\"/articles/" + article.getId() + "/comments\"");
+    }
+
+    @Test
+    void adminPagesShowLogoutAction() throws Exception {
+        User admin = userRepository.save(new User("admin_logout_nav_case", passwordEncoder.encode("admin123"), Role.ADMIN));
+        SessionUser sessionUser = new SessionUser(admin.getId(), admin.getUsername(), Role.ADMIN);
+
+        for (String path : List.of(
+                "/admin/articles",
+                "/admin/articles/new",
+                "/admin/users",
+                "/admin/comments",
+                "/admin/categories",
+                "/admin/tags")) {
+            mockMvc.perform(get(path).sessionAttr(AuthSession.LOGIN_USER, sessionUser))
+                    .andExpect(status().isOk())
+                    .andExpect(content().string(containsString("action=\"/admin/logout\"")))
+                    .andExpect(content().string(containsString("退出")));
+        }
     }
 
     @Test
