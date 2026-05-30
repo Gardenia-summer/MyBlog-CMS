@@ -488,6 +488,30 @@ class BlogFeatureTests {
     }
 
     @Test
+    void userLogoutOnlyAppearsOnHomePageNavigation() throws Exception {
+        User user = userRepository.save(new User("logout_home_only_case", passwordEncoder.encode("admin123"), Role.USER));
+        Category category = categoryRepository.save(new Category("Logout Home Only Category Case"));
+        Article article = articleService.createArticle(form("Logout Home Only Article", "Content", category, List.of()), user.getId());
+        SessionUser sessionUser = new SessionUser(user.getId(), user.getUsername(), user.getNickname(), Role.USER, null, user.getBio());
+
+        mockMvc.perform(get("/").sessionAttr(AuthSession.LOGIN_USER, sessionUser))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("action=\"/logout\"")))
+                .andExpect(content().string(containsString("退出")));
+
+        for (String path : List.of(
+                "/articles/" + article.getId(),
+                "/me/profile",
+                "/me/articles",
+                "/users/" + user.getId())) {
+            mockMvc.perform(get(path).sessionAttr(AuthSession.LOGIN_USER, sessionUser))
+                    .andExpect(status().isOk())
+                    .andExpect(content().string(org.hamcrest.Matchers.not(containsString("action=\"/logout\""))))
+                    .andExpect(content().string(org.hamcrest.Matchers.not(containsString("退出"))));
+        }
+    }
+
+    @Test
     void adminUserProfilesAreNotPublicAndAdminListLinksOnlyRegularUsers() throws Exception {
         User admin = userRepository.save(new User("admin_public_profile_case", passwordEncoder.encode("admin123"), Role.ADMIN));
         User regularUser = new User("regular_public_profile_case", passwordEncoder.encode("admin123"), Role.USER);
