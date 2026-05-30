@@ -31,13 +31,13 @@
                     </div>
                 </details>
             </form>
+        </div>
+        <nav class="nav">
             <a class="user-chip" th:if="${currentUser != null and currentUser.role.name() == 'USER'}" th:href="@{/me/profile}" aria-label="个人资料">
                 <img th:if="${!#strings.isEmpty(currentUser.avatarUrl)}" class="avatar" th:src="@{${currentUser.avatarUrl}}" alt="">
                 <span th:if="${#strings.isEmpty(currentUser.avatarUrl)}" class="avatar avatar-placeholder" th:text="${#strings.substring(currentUser.nickname, 0, 1)}">U</span>
                 <span class="user-chip-name" th:text="${currentUser.nickname}">用户</span>
             </a>
-        </div>
-        <nav class="nav">
             <a th:if="${currentUser == null or currentUser.role.name() == 'USER'}" th:href="@{/}">首页</a>
             <a th:if="${currentUser != null and currentUser.role.name() == 'ADMIN'}" th:href="@{/admin/articles}">后台</a>
             <a th:if="${currentUser != null and currentUser.role.name() == 'USER'}" th:href="@{/me/articles}">我的</a>

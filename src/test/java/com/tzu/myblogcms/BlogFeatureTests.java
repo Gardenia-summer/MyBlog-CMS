@@ -533,10 +533,18 @@ class BlogFeatureTests {
         Article article = articleService.createArticle(form("Logout Home Only Article", "Content", category, List.of()), user.getId());
         SessionUser sessionUser = new SessionUser(user.getId(), user.getUsername(), user.getNickname(), Role.USER, null, user.getBio());
 
-        mockMvc.perform(get("/").sessionAttr(AuthSession.LOGIN_USER, sessionUser))
+        String homeHtml = mockMvc.perform(get("/").sessionAttr(AuthSession.LOGIN_USER, sessionUser))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("action=\"/logout\"")))
-                .andExpect(content().string(containsString("退出")));
+                .andExpect(content().string(containsString("退出")))
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        int navIndex = homeHtml.indexOf("<nav class=\"nav\">");
+        int userChipIndex = homeHtml.indexOf("class=\"user-chip\"", navIndex);
+        int homeLinkIndex = homeHtml.indexOf(">首页</a>", navIndex);
+        assertThat(userChipIndex).isGreaterThan(navIndex);
+        assertThat(userChipIndex).isLessThan(homeLinkIndex);
 
         for (String path : List.of(
                 "/articles/" + article.getId(),
@@ -546,6 +554,7 @@ class BlogFeatureTests {
             mockMvc.perform(get(path).sessionAttr(AuthSession.LOGIN_USER, sessionUser))
                     .andExpect(status().isOk())
                     .andExpect(content().string(org.hamcrest.Matchers.not(containsString("action=\"/logout\""))))
+                    .andExpect(content().string(org.hamcrest.Matchers.not(containsString("class=\"user-chip\""))))
                     .andExpect(content().string(org.hamcrest.Matchers.not(containsString("退出"))));
         }
     }
