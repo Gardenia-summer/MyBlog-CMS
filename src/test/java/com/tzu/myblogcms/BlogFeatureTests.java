@@ -231,6 +231,37 @@ class BlogFeatureTests {
     }
 
     @Test
+    void articleTagsRenderInStableNameOrder() throws Exception {
+        User author = userRepository.save(new User("stable_tag_order_author_case", passwordEncoder.encode("admin123"), Role.USER));
+        Category category = categoryRepository.save(new Category("Stable Tag Order Category Case"));
+        Tag zulu = tagRepository.save(new Tag("Zulu Stable Tag Order Case"));
+        Tag alpha = tagRepository.save(new Tag("Alpha Stable Tag Order Case"));
+        Article article = articleService.createArticle(
+                form("Stable Tag Order Article", "Content", category, List.of(zulu, alpha)),
+                author.getId()
+        );
+
+        String detailHtml = mockMvc.perform(get("/articles/" + article.getId()))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        assertThat(detailHtml.indexOf("Alpha Stable Tag Order Case"))
+                .isLessThan(detailHtml.indexOf("Zulu Stable Tag Order Case"));
+
+        String homeHtml = mockMvc.perform(get("/").param("keyword", "Stable Tag Order Article"))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        int articleIndex = homeHtml.indexOf("Stable Tag Order Article");
+        int alphaIndex = homeHtml.indexOf("Alpha Stable Tag Order Case", articleIndex);
+        int zuluIndex = homeHtml.indexOf("Zulu Stable Tag Order Case", articleIndex);
+        assertThat(articleIndex).isNotNegative();
+        assertThat(alphaIndex).isLessThan(zuluIndex);
+    }
+
+    @Test
     void userCanLikeAndUnlikeArticle() throws Exception {
         User author = userRepository.save(new User("like_author_case", passwordEncoder.encode("admin123"), Role.USER));
         User liker = userRepository.save(new User("like_user_case", passwordEncoder.encode("admin123"), Role.USER));
