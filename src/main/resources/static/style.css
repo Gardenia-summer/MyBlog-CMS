@@ -85,6 +85,109 @@ h2 {
     flex-wrap: wrap;
 }
 
+.home-search-form {
+    position: relative;
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+}
+
+.home-search-input {
+    display: flex;
+    flex: 0 0 150px;
+    align-items: center;
+    gap: 8px;
+    width: 150px;
+    min-width: 150px;
+    max-width: 150px;
+    height: 38px;
+    min-height: 38px;
+    overflow: hidden;
+    padding: 0 14px;
+    border: 1px solid #e3e6ea;
+    border-radius: 19px;
+    background: #eef0f3;
+    color: #69707a;
+    font-weight: 400;
+}
+
+.home-search-input input {
+    flex: 1 1 0;
+    width: auto;
+    min-width: 0;
+    min-height: 36px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    outline: 0;
+}
+
+.search-icon {
+    position: relative;
+    width: 16px;
+    height: 16px;
+    flex: 0 0 auto;
+}
+
+.search-icon::before {
+    content: "";
+    position: absolute;
+    inset: 1px 4px 4px 1px;
+    border: 2px solid #7a818a;
+    border-radius: 50%;
+}
+
+.search-icon::after {
+    content: "";
+    position: absolute;
+    right: 1px;
+    bottom: 1px;
+    width: 7px;
+    height: 2px;
+    border-radius: 999px;
+    background: #7a818a;
+    transform: rotate(45deg);
+    transform-origin: center;
+}
+
+.filter-menu {
+    position: relative;
+}
+
+.filter-menu summary {
+    display: inline-flex;
+    align-items: center;
+    min-height: 38px;
+    padding: 8px 12px;
+    border-radius: 999px;
+    color: #3b4046;
+    background: #eef0f3;
+    font-weight: 700;
+    cursor: pointer;
+    list-style: none;
+}
+
+.filter-menu summary::-webkit-details-marker {
+    display: none;
+}
+
+.filter-panel {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    z-index: 10;
+    display: grid;
+    width: 280px;
+    gap: 10px;
+    padding: 12px;
+    border: 1px solid #e3e6ea;
+    border-radius: 8px;
+    background: #ffffff;
+    box-shadow: 0 12px 30px rgba(32, 33, 36, 0.14);
+}
+
 .article-list,
 .table-list {
     display: grid;
@@ -432,6 +535,28 @@ button,
 
     .user-chip {
         max-width: 100%;
+    }
+
+    .home-search-form {
+        width: 100%;
+        min-width: 0;
+    }
+
+    .home-search-input {
+        flex: 1 1 auto;
+        min-width: 0;
+        width: auto;
+    }
+
+    .filter-menu {
+        align-self: flex-start;
+    }
+
+    .filter-panel {
+        position: static;
+        width: min(280px, calc(100vw - 32px));
+        margin-top: 8px;
+        box-shadow: none;
     }
 
     h1 {

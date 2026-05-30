@@ -167,10 +167,29 @@ class BlogFeatureTests {
         User author = userRepository.save(new User("search_author_case", passwordEncoder.encode("admin123"), Role.USER));
         Category category = categoryRepository.save(new Category("Search Category Case"));
         Tag tag = tagRepository.save(new Tag("Search Tag Case"));
+        Category otherCategory = categoryRepository.save(new Category("Other Search Category Case"));
+        Tag otherTag = tagRepository.save(new Tag("Other Search Tag Case"));
         Article article = articleService.createArticle(
                 form("Searchable Spring Title", "Body mentions persistence", category, List.of(tag)),
                 author.getId()
         );
+        articleService.createArticle(
+                form("Filtered Out Search Article", "Separate body", otherCategory, List.of(otherTag)),
+                author.getId()
+        );
+
+        String homeHtml = mockMvc.perform(get("/"))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        assertThat(homeHtml)
+                .contains("class=\"home-search-form\"")
+                .contains("name=\"keyword\"")
+                .contains("name=\"categoryId\"")
+                .contains("name=\"tagId\"")
+                .contains("class=\"filter-menu\"")
+                .doesNotContain("class=\"toolbar\"");
 
         mockMvc.perform(get("/").param("keyword", "Spring"))
                 .andExpect(status().isOk())
@@ -179,6 +198,26 @@ class BlogFeatureTests {
         mockMvc.perform(get("/").param("keyword", "search_author_case"))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("Searchable Spring Title")));
+
+        String categoryHtml = mockMvc.perform(get("/")
+                        .param("categoryId", category.getId().toString()))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        assertThat(categoryHtml)
+                .contains("Searchable Spring Title")
+                .doesNotContain("Filtered Out Search Article");
+
+        String tagHtml = mockMvc.perform(get("/")
+                        .param("tagId", tag.getId().toString()))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        assertThat(tagHtml)
+                .contains("Searchable Spring Title")
+                .doesNotContain("Filtered Out Search Article");
 
         mockMvc.perform(post("/articles/" + article.getId() + "/comments")
                         .sessionAttr(AuthSession.LOGIN_USER, new SessionUser(author.getId(), author.getUsername(), Role.USER))
