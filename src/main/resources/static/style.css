@@ -203,6 +203,23 @@ h2 {
     border-radius: 8px;
 }
 
+.clickable-article {
+    cursor: pointer;
+    transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
+}
+
+.clickable-article:hover,
+.clickable-article:focus-visible {
+    border-color: #c7d2df;
+    box-shadow: 0 14px 30px rgba(32, 33, 36, 0.13);
+    transform: translateY(-3px);
+}
+
+.clickable-article:focus-visible {
+    outline: 3px solid rgba(23, 105, 170, 0.28);
+    outline-offset: 3px;
+}
+
 .article-title {
     display: block;
     color: #202124;

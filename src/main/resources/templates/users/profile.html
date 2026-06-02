@@ -34,7 +34,12 @@
 
     <h2 th:text="${profileUser.nickname} + '的文章'">用户的文章</h2>
     <section class="article-list" th:if="${!articlePage.empty}">
-        <article class="article-item" th:each="article : ${articlePage.content}">
+        <article class="article-item clickable-article"
+                 th:each="article : ${articlePage.content}"
+                 th:data-href="@{/articles/{id}(id=${article.id})}"
+                 role="link"
+                 tabindex="0"
+                 th:attr="aria-label='查看文章：' + ${article.title}">
             <div class="article-list-row">
                 <div class="article-list-main">
                     <a class="article-title" th:href="@{/articles/{id}(id=${article.id})}" th:text="${article.title}">文章标题</a>
@@ -58,5 +63,6 @@
         <a th:if="${articlePage.hasNext()}" th:href="@{/users/{id}(id=${profileUser.id},page=${articlePage.number + 1})}">下一页</a>
     </nav>
 </main>
+<script th:src="@{/article-list.js}"></script>
 </body>
 </html>

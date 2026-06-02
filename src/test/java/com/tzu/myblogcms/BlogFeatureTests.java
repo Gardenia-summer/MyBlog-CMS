@@ -506,6 +506,11 @@ class BlogFeatureTests {
         assertThat(homeHtml)
                 .contains("Visible Author Nickname")
                 .contains("href=\"/users/" + author.getId() + "\"")
+                .contains("class=\"article-item clickable-article\"")
+                .contains("data-href=\"/articles/" + article.getId() + "\"")
+                .contains("role=\"link\"")
+                .contains("tabindex=\"0\"")
+                .contains("article-list.js")
                 .doesNotContain("hidden_author_username_case");
 
         String detailHtml = mockMvc.perform(get("/articles/" + article.getId()))
@@ -546,6 +551,11 @@ class BlogFeatureTests {
                 .contains("/uploads/avatars/public-profile.png")
                 .contains("Public profile bio")
                 .contains("Public Profile Article")
+                .contains("class=\"article-item clickable-article\"")
+                .contains("data-href=\"/articles/")
+                .contains("role=\"link\"")
+                .contains("tabindex=\"0\"")
+                .contains("article-list.js")
                 .contains("Public Profile Category Case")
                 .contains("Public Profile Tag Case")
                 .doesNotContain("public_profile_username_case")
@@ -555,6 +565,39 @@ class BlogFeatureTests {
                 .doesNotContain("编辑")
                 .doesNotContain("删除")
                 .doesNotContain(";jsessionid");
+    }
+
+    @Test
+    void managementArticleListsDoNotUseWholeRowClickTargets() throws Exception {
+        User author = userRepository.save(new User("management_click_author_case", passwordEncoder.encode("admin123"), Role.USER));
+        User admin = userRepository.save(new User("management_click_admin_case", passwordEncoder.encode("admin123"), Role.ADMIN));
+        Category category = categoryRepository.save(new Category("Management Click Category Case"));
+        Article article = articleService.createArticle(form("Management Click Article", "Content", category, List.of()), author.getId());
+
+        String mineHtml = mockMvc.perform(get("/me/articles")
+                        .sessionAttr(AuthSession.LOGIN_USER, new SessionUser(author.getId(), author.getUsername(), Role.USER)))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        assertThat(mineHtml)
+                .contains("Management Click Article")
+                .contains("href=\"/articles/" + article.getId() + "\"")
+                .doesNotContain("clickable-article")
+                .doesNotContain("data-href=")
+                .doesNotContain("article-list.js");
+
+        String adminHtml = mockMvc.perform(get("/admin/articles")
+                        .sessionAttr(AuthSession.LOGIN_USER, new SessionUser(admin.getId(), admin.getUsername(), Role.ADMIN)))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        assertThat(adminHtml)
+                .contains("Management Click Article")
+                .doesNotContain("clickable-article")
+                .doesNotContain("data-href=")
+                .doesNotContain("article-list.js");
     }
 
     @Test
