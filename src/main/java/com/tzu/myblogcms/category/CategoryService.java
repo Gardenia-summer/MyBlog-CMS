@@ -34,6 +34,7 @@ public class CategoryService {
 
     @Transactional
     public void delete(Long id) {
+        // 分类被文章引用时禁止删除，避免文章详情页出现无分类的脏数据。
         if (articleRepository.countByCategory_Id(id) > 0) {
             throw new IllegalArgumentException("已有文章使用该分类，无法删除");
         }

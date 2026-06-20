@@ -25,10 +25,12 @@ public class ArticleLikeService {
     public void toggleLike(Long articleId, Long userId) {
         Article article = articleRepository.findById(articleId).orElseThrow();
         User user = userRepository.findById(userId).orElseThrow();
+        // 点赞只开放给普通用户，管理员账号只负责内容管理。
         if (user.getRole() != Role.USER) {
             throw new IllegalArgumentException("只有普通用户可以点赞");
         }
 
+        // toggle 操作和 like_count 更新放在同一个事务里，避免列表数字和点赞表不一致。
         articleLikeRepository.findByArticleAndUser(article, user)
                 .ifPresentOrElse(
                         like -> {
@@ -55,6 +57,7 @@ public class ArticleLikeService {
     @Transactional
     public void deleteLikesByUser(User user) {
         for (ArticleLike like : articleLikeRepository.findByUser(user)) {
+            // 删除用户时要先扣减其点过的文章计数，再删除点赞记录。
             like.getArticle().decrementLikeCount();
             articleLikeRepository.delete(like);
         }

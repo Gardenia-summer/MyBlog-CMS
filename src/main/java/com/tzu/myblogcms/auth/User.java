@@ -63,6 +63,7 @@ public class User {
 
     @PrePersist
     void prePersist() {
+        // 兼容 SQL 种子或迁移遗漏：普通用户入库前补齐公开资料默认值。
         if (this.nickname == null || this.nickname.isBlank()) {
             this.nickname = this.username;
         }

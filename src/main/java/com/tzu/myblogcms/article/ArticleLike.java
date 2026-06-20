@@ -18,6 +18,7 @@ import java.time.LocalDateTime;
 @Entity
 @Table(
         name = "article_likes",
+        // 数据库唯一约束兜底保证：同一普通用户对同一文章最多只有一条点赞记录。
         uniqueConstraints = @UniqueConstraint(name = "uk_article_likes_article_user", columnNames = {"article_id", "user_id"})
 )
 public class ArticleLike {

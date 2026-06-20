@@ -36,6 +36,7 @@ public class CommentService {
 
     @Transactional
     public Comment create(Long articleId, Long authorId, String content) {
+        // 登录拦截器负责身份，服务层仍负责内容校验，避免空评论入库。
         if (content == null || content.trim().isEmpty()) {
             throw new IllegalArgumentException("Comment is required");
         }

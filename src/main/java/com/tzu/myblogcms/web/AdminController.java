@@ -131,6 +131,7 @@ public class AdminController {
 
     @PostMapping("/admin/users/{id}/delete")
     public String deleteUser(@PathVariable Long id, HttpSession session) {
+        // 防止管理员在后台把当前登录账号删掉，避免 Session 残留到不存在的用户。
         AuthSession.currentUser(session)
                 .filter(user -> !user.id().equals(id))
                 .ifPresent(user -> userAdminService.deleteUser(id));

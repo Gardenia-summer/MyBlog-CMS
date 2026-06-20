@@ -40,6 +40,7 @@ public class AvatarService {
             throw new IllegalArgumentException("管理员不需要上传头像");
         }
 
+        // 先保存新头像，再清理旧头像；即使清理失败，也不会影响用户刚上传的头像可用。
         String oldAvatarUrl = user.getAvatarUrl();
         String newAvatarUrl = storeAvatar(user.getId(), avatar);
         user.setAvatarUrl(newAvatarUrl);
@@ -51,6 +52,7 @@ public class AvatarService {
         validate(avatar);
         String fileName = "user-" + userId + "-" + UUID.randomUUID() + extensionFor(avatar.getContentType());
         Path target = avatarDir.resolve(fileName).normalize();
+        // normalize + startsWith 防止构造出的路径逃出头像目录。
         if (!target.startsWith(avatarDir)) {
             throw new IllegalArgumentException("头像文件名无效");
         }

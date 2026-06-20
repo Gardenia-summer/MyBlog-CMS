@@ -20,6 +20,7 @@ public class AuthService {
         if (username == null || password == null) {
             return null;
         }
+        // 普通用户登录和管理员登录共用校验逻辑，通过 requiredRole 把两个入口隔离开。
         return userRepository.findByUsername(username.trim())
                 .filter(user -> requiredRole == null || user.getRole() == requiredRole)
                 .filter(user -> passwordEncoder.matches(password, user.getPasswordHash()))
@@ -48,6 +49,7 @@ public class AuthService {
         if (userRepository.existsByUsername(cleanUsername)) {
             throw new IllegalArgumentException("Username already exists");
         }
+        // User 构造器会把普通用户的昵称和简介初始化好，登录名仍然保持不可变。
         return userRepository.save(new User(cleanUsername, passwordEncoder.encode(password), Role.USER));
     }
 }

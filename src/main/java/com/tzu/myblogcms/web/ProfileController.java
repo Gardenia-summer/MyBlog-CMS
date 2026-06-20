@@ -37,6 +37,7 @@ public class ProfileController {
         SessionUser currentUser = AuthSession.currentUser(session).orElseThrow();
         try {
             SessionUser updatedUser = avatarService.updateAvatar(currentUser.id(), avatar);
+            // 资料更新成功后立即刷新 Session，页面导航和公开信息不用等下次登录。
             session.setAttribute(AuthSession.LOGIN_USER, updatedUser);
             redirectAttributes.addFlashAttribute("message", "头像已更新");
         } catch (IllegalArgumentException | IllegalStateException ex) {

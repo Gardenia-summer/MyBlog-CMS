@@ -74,6 +74,7 @@ public class PublicBlogController {
     public String detail(@PathVariable Long id, HttpServletRequest request, Model model) {
         var article = articleService.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        // getSession(false) 避免匿名访客只看文章详情时被创建无意义 Session。
         SessionUser currentUser = AuthSession.currentUser(request.getSession(false)).orElse(null);
         model.addAttribute("article", article);
         model.addAttribute("comments", commentService.listByArticle(article));
@@ -92,6 +93,7 @@ public class PublicBlogController {
         var profileUser = userRepository.findById(id)
                 .filter(user -> user.getRole() == Role.USER)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        // 公开主页只展示普通用户资料；管理员账号不暴露公开“我的”页面。
         model.addAttribute("profileUser", profileUser);
         model.addAttribute("articlePage", articleService.listByAuthor(
                 profileUser.getId(),
@@ -118,6 +120,7 @@ public class PublicBlogController {
     @PostMapping("/articles/{id}/like")
     public String like(@PathVariable Long id, HttpSession session) {
         SessionUser user = AuthSession.currentUser(session).orElseThrow();
+        // 点赞接口保持普通表单提交，服务层负责“点赞/取消点赞”的 toggle。
         articleLikeService.toggleLike(id, user.id());
         return "redirect:/articles/" + id;
     }

@@ -15,6 +15,7 @@ public class UserLoginInterceptor implements HandlerInterceptor {
         if (AuthSession.hasRole(request.getSession(false), Role.USER)) {
             return true;
         }
+        // 管理员不进入普通用户功能，防止用后台账号发评论或点赞。
         if (AuthSession.hasRole(request.getSession(false), Role.ADMIN)) {
             response.sendRedirect(request.getContextPath() + "/admin/articles");
             return false;

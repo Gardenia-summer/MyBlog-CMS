@@ -53,6 +53,7 @@ public class ArticleService {
     @Transactional(readOnly = true)
     public Page<Article> searchArticles(String keyword, Long categoryId, Long tagId, Pageable pageable) {
         String cleanKeyword = keyword == null || keyword.trim().isEmpty() ? null : keyword.trim();
+        // 公开列表按“点赞数多优先、同赞数早发布优先”取出，再做分类/标签/关键字筛选。
         List<Article> filtered = articleRepository.findAllByOrderByLikeCountDescCreatedAtAsc().stream()
                 .filter(article -> categoryId == null || article.getCategory().getId().equals(categoryId))
                 .filter(article -> tagId == null || article.getTags().stream().anyMatch(tag -> tag.getId().equals(tagId)))
@@ -66,12 +67,14 @@ public class ArticleService {
     @Transactional(readOnly = true)
     public Page<Article> listMine(Long authorId, Pageable pageable) {
         User author = userRepository.findById(authorId).orElseThrow();
+        // “我的文章”是管理列表，保留按发布时间倒序，方便用户找最近编辑的内容。
         return articleRepository.findByAuthorOrderByCreatedAtDesc(author, pageable);
     }
 
     @Transactional(readOnly = true)
     public Page<Article> listByAuthor(Long authorId, Pageable pageable) {
         User author = userRepository.findById(authorId).orElseThrow();
+        // 公开用户主页属于阅读列表，排序规则和首页保持一致。
         return articleRepository.findByAuthorOrderByLikeCountDescCreatedAtAsc(author, pageable);
     }
 
@@ -92,6 +95,7 @@ public class ArticleService {
     @Transactional
     public void updateOwnArticle(Long articleId, ArticleForm form, Long authorId) {
         Article article = requireArticle(articleId);
+        // 普通用户只能改自己的文章；管理员管理全站文章时走 updateArticle。
         if (!article.getAuthor().getId().equals(authorId)) {
             throw new IllegalArgumentException("Only the author can edit this article");
         }
@@ -115,6 +119,7 @@ public class ArticleService {
     @Transactional
     public void deleteOwnArticle(Long id, Long authorId) {
         Article article = requireArticle(id);
+        // 删除也做作者校验，防止直接构造 URL 删除他人文章。
         if (!article.getAuthor().getId().equals(authorId)) {
             throw new IllegalArgumentException("Only the author can delete this article");
         }

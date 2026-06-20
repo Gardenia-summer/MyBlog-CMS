@@ -15,6 +15,7 @@ public class UserProfileService {
     @Transactional
     public SessionUser updateNickname(Long userId, String nickname) {
         User user = userRepository.findById(userId).orElseThrow();
+        // 个人资料只面向普通用户；管理员账号不进入“我的”资料编辑流程。
         if (user.getRole() != Role.USER) {
             throw new IllegalArgumentException("Only regular users can update nickname");
         }
@@ -26,12 +27,14 @@ public class UserProfileService {
             throw new IllegalArgumentException("Nickname cannot exceed 80 characters");
         }
         user.updateNickname(cleanNickname);
+        // 返回新的 SessionUser，让控制器同步 Session，页面顶部和评论署名能立刻显示新昵称。
         return toSessionUser(user);
     }
 
     @Transactional
     public SessionUser updateBio(Long userId, String bio) {
         User user = userRepository.findById(userId).orElseThrow();
+        // 简介属于普通用户公开资料，管理员账号保留为空。
         if (user.getRole() != Role.USER) {
             throw new IllegalArgumentException("Only regular users can update bio");
         }
@@ -43,6 +46,7 @@ public class UserProfileService {
             throw new IllegalArgumentException("简介不能超过 300 字");
         }
         user.updateBio(cleanBio);
+        // 简介同样回写到 Session，避免用户保存后仍看到旧资料。
         return toSessionUser(user);
     }
 

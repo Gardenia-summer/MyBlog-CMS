@@ -44,6 +44,7 @@ public class TagService {
 
     @Transactional
     public void delete(Long id) {
+        // 标签被文章引用时禁止删除，保持文章和标签的多对多关系完整。
         if (articleRepository.countByTags_Id(id) > 0) {
             throw new IllegalArgumentException("已有文章使用该标签，无法删除");
         }

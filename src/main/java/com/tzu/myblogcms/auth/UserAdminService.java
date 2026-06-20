@@ -28,8 +28,10 @@ public class UserAdminService {
     @Transactional
     public void deleteUser(Long id) {
         User user = userRepository.findById(id).orElseThrow();
+        // 删除用户前先处理点赞，确保被点赞文章的 like_count 能同步减少。
         articleLikeService.deleteLikesByUser(user);
         commentRepository.deleteByAuthor(user);
+        // 用户自己的文章再逐篇删除，交给 Article 上的级联关系清理评论和点赞记录。
         for (Article article : articleRepository.findByAuthor(user)) {
             articleRepository.delete(article);
         }

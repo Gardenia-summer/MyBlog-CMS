@@ -3,6 +3,7 @@
 }
 
 :root {
+    /* 清爽奶油主题变量，集中控制全站暖色调。 */
     --color-page: #fff7e8;
     --color-card: #fffdf7;
     --color-surface: #f7ead6;

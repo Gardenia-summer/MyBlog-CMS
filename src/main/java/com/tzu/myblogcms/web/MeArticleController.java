@@ -69,6 +69,7 @@ public class MeArticleController {
     public String edit(@PathVariable Long id, HttpSession session, Model model) {
         SessionUser user = AuthSession.currentUser(session).orElseThrow();
         var article = articleService.requireArticle(id);
+        // 编辑页也先校验作者，避免用户直接访问他人的编辑 URL。
         if (!article.getAuthor().getId().equals(user.id())) {
             return "redirect:/me/articles";
         }

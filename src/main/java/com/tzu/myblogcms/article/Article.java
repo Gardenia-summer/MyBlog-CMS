@@ -64,6 +64,7 @@ public class Article {
     @OneToMany(mappedBy = "article", cascade = CascadeType.REMOVE)
     private Set<ArticleLike> likes = new LinkedHashSet<>();
 
+    // 冗余保存点赞数，列表页可以直接排序展示，不必每次聚合 article_likes。
     @Column(nullable = false)
     private int likeCount;
 
@@ -142,6 +143,7 @@ public class Article {
     }
 
     public void decrementLikeCount() {
+        // 防御性处理，避免重复取消或迁移数据异常时出现负数。
         if (this.likeCount > 0) {
             this.likeCount--;
         }
